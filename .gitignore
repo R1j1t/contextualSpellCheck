@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# research papers
+*.pdf
+
+# mac specific ignores
+.DS_Store
+
+# Model folder
+uncased_L-4_H-512_A-8/
