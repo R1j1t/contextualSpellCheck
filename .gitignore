@@ -135,7 +135,7 @@ dmypy.json
 .DS_Store
 
 # Model folder
-uncased_L-4_H-512_A-8/
+# uncased_L-4_H-512_A-8/
 
 # research code
 peter's code/
