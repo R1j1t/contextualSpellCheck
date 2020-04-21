@@ -9,6 +9,8 @@ from spacy.vocab import Vocab
 from transformers import AutoModelWithLMHead, AutoTokenizer
 
 class oovChecker():
+    """Class object for Out Of Vocabulary(OOV) corrections 
+    """
     
     def __init__(self,debug=False):
         self.nlp = spacy.load("en_core_web_sm", disable=["tagger", "parser"]) # using default tokeniser with NER
@@ -23,6 +25,14 @@ class oovChecker():
         self.debug = debug
         
     def check(self, query=''):
+        """Complete pipeline which returns update query
+
+        Keyword Arguments:
+            query {str} -- User query for which spell checking to be done (default: {''})
+
+        Returns:
+            {str} -- returns updated query with spelling corrections (if any)
+        """
         if type(query) != str and len(query)==0:
             print('Invalid query, expected non empty `str` but passed',query)
             
@@ -41,18 +51,24 @@ class oovChecker():
             print('Original text:', query)
         return updatedQuery
   
-    ## query --> "aa bb cc..."
+
     def misspellIdentify(self, query=''):
-        """
+        """To identify misspelled words from the query
+
         At present, All the following criteria should be met for word to be misspelled
         1. Should not in our vocab
         2. should not be a Person
         3. Should not be a number
-        
-        @params query: sequence on which to perform 
-        @return Dictonary: {'misspell-1':['candidate-1','candidate-2', ...],
-                            'misspell-2':['candidate-1','candidate-2'. ...]}
-        """            
+
+
+        Keyword Arguments:
+            query {str} -- user query eg: "aa bb cc..." (default: {''})
+
+        Returns:
+            {tuple} -- returns `List[`Token`]` and `Doc`
+        """
+
+                    
         doc = self.nlp(query)
         misspell = []
         for token in doc:
@@ -66,13 +82,25 @@ class oovChecker():
         return (misspell, doc)
     
     def candidateGenerator(self, misspellings, top_n=5 ,query=''):
-        """
+        """Returns Candidates for misspells
+
         This function is responsible for generating candidate list for misspell
         using BERT. The misspell is masked with a token and the model tries to 
         predict `n` candidates for the mask.
-        
-        
+
+        Arguments:
+            misspellings {List[`Token`]} -- Contains List of `Token` object types 
+            from spacy to preserve meta information of the token 
+
+        Keyword Arguments:
+            top_n {int} -- Number of candidates to be generated (default: {5})
+            query {User query} -- This is used for context pwered candidate generations.  (default: {''})
+
+        Returns:
+            Dict{`Token`:List[{str}]} -- Eg of return type {misspell-1:['candidate-1','candidate-2', ...],
+                            misspell-2:['candidate-1','candidate-2'. ...]}
         """
+
         response = {}
             
         for token in misspellings:
@@ -101,6 +129,21 @@ class oovChecker():
         return response
     
     def candidateRanking(self, misspellingsDict):
+        """Ranking the candidates based on edit Distance
+
+        At present using a library to calculate edit distance 
+        between actual word and candidate words. Candidate word 
+        for which edit distance is lowest is selected. If least 
+        edit distance is same then word with higher probability 
+        is selected by default
+
+        Arguments:
+            misspellingsDict {Dict{`Token`:List[{str}]}} -- 
+            Orginal token is the key and candidate words are the values 
+
+        Returns:
+            Dict{`Token`:{str}} -- Eg of return type {misspell-1:'BEST-CANDIDATE'}
+        """
                 
         response={}
 #         doc = self.nlp(query)
@@ -121,6 +164,16 @@ class oovChecker():
                 
 
 def timeLog(fnName, relativeTime):
+    """For time log
+
+    Arguments:
+        fnName {str} -- function name to print
+        relativeTime {datetime} -- previous date time for subtraction
+
+    Returns:
+        datetime -- datetime of current logging
+    """
+
     timeNow = datetime.datetime.now()
     print(fnName, "took: ",timeNow - relativeTime)
     return datetime.datetime.now()
