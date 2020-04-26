@@ -17,7 +17,7 @@ class oovChecker:
         self.nlp = spacy.load(
             "en_core_web_sm", disable=["tagger", "parser"]
         )  # using default tokeniser with NER
-        with open("./uncased_L-4_H-512_A-8/vocab.txt") as f:
+        with open("./data/vocab.txt") as f:
             # if want to remove '[unusedXX]' from vocab
             # words = [line.rstrip() for line in f if not line.startswith('[unused')]
             words = [line.rstrip() for line in f]
