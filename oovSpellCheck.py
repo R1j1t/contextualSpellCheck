@@ -46,9 +46,10 @@ class oovChecker:
             updatedQuery = ""
             for i in doc:
                 if i in misspellTokens:
-                    updatedQuery += answer[i] + " "
+                if i in misspellTokens:
+                    updatedQuery += answer[i] + i.whitespace_
                 else:
-                    updatedQuery += i.text + " "
+                    updatedQuery += i.text_with_ws
 
             print("Did you mean: ", updatedQuery)
             print("Original text:", query)
