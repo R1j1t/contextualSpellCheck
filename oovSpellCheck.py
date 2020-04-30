@@ -3,15 +3,17 @@ import torch
 import editdistance
 import datetime
 
-from spacy.tokens import Token
+from spacy.tokens import Doc, Token, Span
 from spacy.vocab import Vocab
 
 from transformers import AutoModelWithLMHead, AutoTokenizer
 
 
-class oovChecker:
+class spellChecker(object):
     """Class object for Out Of Vocabulary(OOV) corrections 
     """
+
+    name = "contextual spellchecker"
 
     def __init__(self, debug=False):
         self.nlp = spacy.load(
@@ -26,6 +28,79 @@ class oovChecker:
         self.BertModel = AutoModelWithLMHead.from_pretrained("bert-base-cased")
         self.mask = self.BertTokenizer.mask_token
         self.debug = debug
+        if not Doc.has_extension("contextual_spellCheck"):
+            Doc.set_extension("contextual_spellCheck", default=True)
+            Doc.set_extension("performed_spellCheck", default=False)
+
+            # {originalToken-1:[suggestedToken-1,suggestedToken-2,..],
+            #  originalToken-2:[...]}
+            Doc.set_extension(
+                "suggestions_spellCheck", getter=self.doc_suggestions_spellCheck
+            )
+            Doc.set_extension("outcome_spellCheck", default="")
+            Doc.set_extension("score_spellCheck", default=None)
+
+            Span.set_extension(
+                "get_has_spellCheck", getter=self.span_require_spellCheck
+            )
+            Span.set_extension("score_spellCheck", getter=self.span_score_spellCheck)
+
+            Token.set_extension(
+                "get_require_spellCheck", getter=self.token_require_spellCheck
+            )
+            Token.set_extension(
+                "get_suggestion_spellCheck", getter=self.token_suggestion_spellCheck
+            )
+            Token.set_extension("score_spellCheck", getter=self.token_score_spellCheck)
+
+    def token_require_spellCheck(self, token):
+        """Getter for Token attributes. 
+        @Returns True if the token requires spellCheck
+        """
+        return any(
+            [
+                token.orth == suggestion.orth
+                for suggestion in token.doc._.suggestions_spellCheck.keys()
+            ]
+        )
+
+    def token_suggestion_spellCheck(self, token):
+        """Getter for Token attributes. 
+        @Returns    [] or List['suggestion-1','suggestion-1',...] 
+                    
+        """
+        for suggestion in token.doc._.suggestions_spellCheck.keys():
+            if token.orth == suggestion.orth:
+                return token.doc._.suggestions_spellCheck[token]
+        return []
+
+    def token_score_spellCheck(self, token):
+        """Getter for Token attributes. 
+        @Returns    [] or List[('suggestion-1',score-1), ('suggestion-1',score-2), ...] 
+                    
+        """
+        for suggestion in token.doc._.score_spellCheck.keys():
+            if token.orth == suggestion.orth:
+                return [token.doc._.score_spellCheck[token]]
+        return []
+
+    def span_score_spellCheck(self, span):
+        return [{token: self.token_score_spellCheck(token)} for token in span]
+
+    def span_require_spellCheck(self, span):
+        """Getter for Token attributes. 
+        @Returns True if the span requires spellCheck
+        """
+        return any([self.token_require_spellCheck(token) for token in span])
+
+    def doc_suggestions_spellCheck(self, doc):
+        response = {}
+        for token in doc._.score_spellCheck:
+            if token not in response:
+                response[token] = []
+            for suggestion_score in doc._.score_spellCheck[token]:
+                response[token].append(suggestion_score[0])
+        return response
 
     def check(self, query=""):
         """Complete pipeline which returns update query
@@ -39,21 +114,23 @@ class oovChecker:
         if type(query) != str and len(query) == 0:
             print("Invalid query, expected non empty `str` but passed", query)
 
+        modelLodaded = datetime.datetime.now()
         misspellTokens, doc = self.misspellIdentify(query)
+        modelLoadTime = timeLog("Misspell identification: ", modelLodaded)
         if len(misspellTokens) > 0:
-            candidate = self.candidateGenerator(misspellTokens, query=query)
+            candidate = self.candidateGenerator(doc, misspellTokens, query=query)
             answer = self.candidateRanking(candidate)
             updatedQuery = ""
             for i in doc:
-                if i in misspellTokens:
                 if i in misspellTokens:
                     updatedQuery += answer[i] + i.whitespace_
                 else:
                     updatedQuery += i.text_with_ws
 
             print("Did you mean: ", updatedQuery)
+            doc._.set("outcome_spellCheck", updatedQuery)
             print("Original text:", query)
-        return updatedQuery
+        return updatedQuery, doc
 
     def misspellIdentify(self, query=""):
         """To identify misspelled words from the query
@@ -86,7 +163,7 @@ class oovChecker:
             print(misspell)
         return (misspell, doc)
 
-    def candidateGenerator(self, misspellings, top_n=5, query=""):
+    def candidateGenerator(self, doc, misspellings, top_n=5, query=""):
         """Returns Candidates for misspells
 
         This function is responsible for generating candidate list for misspell
@@ -107,10 +184,15 @@ class oovChecker:
         """
 
         response = {}
+        score = {}
 
         for token in misspellings:
-            updatedQuery = query
-            updatedQuery = updatedQuery.replace(token.text, self.mask)
+            updatedQuery = ""
+            for i in doc:
+                if i.i == token.i:
+                    updatedQuery += self.mask + i.whitespace_
+                else:
+                    updatedQuery += i.text_with_ws
             if self.debug:
                 print(
                     "For", "`" + token.text + "`", "updated query is:\n", updatedQuery
@@ -122,15 +204,30 @@ class oovChecker:
             )[1]
             token_logits = self.BertModel(model_input)[0]
             mask_token_logits = token_logits[0, mask_token_index, :]
+            if self.debug:
+                print("\nmask_token_logits:", mask_token_logits)
 
-            top_n_tokens = torch.topk(mask_token_logits, 5, dim=1).indices[0].tolist()
+            token_probability = torch.nn.functional.softmax(mask_token_logits, dim=1)
+            if self.debug:
+                print("\ntoken_probability: ", token_probability)
+            top_n_score, top_n_tokens = torch.topk(token_probability, top_n, dim=1)
+            top_n_tokens = top_n_tokens[0].tolist()
+            top_n_score = top_n_score[0].tolist()
             if self.debug:
                 print("top_n_tokens:", top_n_tokens)
+                print("token_score: ", top_n_score)
 
             if token not in response:
                 response[token] = [
                     self.BertTokenizer.decode([candidateWord])
                     for candidateWord in top_n_tokens
+                ]
+                score[token] = [
+                    (
+                        self.BertTokenizer.decode([top_n_tokens[i]]),
+                        round(top_n_score[i], 5),
+                    )
+                    for i in range(top_n)
                 ]
 
             # for candidate in top_5_tokens:
@@ -138,7 +235,10 @@ class oovChecker:
             # print(updatedQuery.replace(self.mask, self.BertTokenizer.decode([candidate])))
 
             if self.debug:
-                print(response)
+                print("\nresponse: ", response, "\nscore: ", score)
+
+        doc._.set("performed_spellCheck", True)
+        doc._.set("score_spellCheck", score)
 
         return response
 
@@ -197,8 +297,28 @@ def timeLog(fnName, relativeTime):
 if __name__ == "__main__":
     print("Code running...")
     start = datetime.datetime.now()
-    checker = oovChecker()
+    checker = spellChecker(debug=False)
     modelLoadTime = timeLog("Model Loading", start)
 
-    checker.check("Income was $9.4 million compared to the prior year of $2.7 milion.")
-    checkerTime = timeLog("Correction (if any)", modelLoadTime)
+    query = "Income was $9.4 milion compared to the prior year of $2.7 milion."
+
+    (updatedQuery, doc) = checker.check(query)
+    checkerTime = timeLog("Sentence Correction", modelLoadTime)
+
+    print("=" * 20, "Doc Extention Test", "=" * 20)
+    print(doc._.contextual_spellCheck)
+    print(doc._.performed_spellCheck)
+    print(doc._.suggestions_spellCheck)
+    print(doc._.outcome_spellCheck)
+    print(doc._.score_spellCheck)
+
+    print("=" * 20, "Span Extention Test", "=" * 20)
+    print(checker.token_require_spellCheck(doc[len(doc) - 2]), doc[len(doc) - 2].text)
+    print(doc[len(doc) - 7 : len(doc) - 1]._.get_has_spellCheck)
+    print(doc[len(doc) - 7 : len(doc) - 1]._.score_spellCheck)
+
+    print("=" * 20, "Token Extention Test", "=" * 20)
+    print(checker.token_require_spellCheck(doc[len(doc) - 2]), doc[len(doc) - 2].text)
+    print(doc[len(doc) - 2]._.get_require_spellCheck)
+    print(doc[len(doc) - 2]._.get_suggestion_spellCheck)
+    print(doc[len(doc) - 2]._.score_spellCheck)
