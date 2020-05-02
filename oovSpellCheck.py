@@ -15,11 +15,11 @@ class spellChecker(object):
 
     name = "contextual spellchecker"
 
-    def __init__(self, debug=False):
-        self.nlp = spacy.load(
-            "en_core_web_sm", disable=["tagger", "parser"]
-        )  # using default tokeniser with NER
-        with open("./data/vocab.txt") as f:
+    def __init__(self, vocab_path="./data/vocab.txt", debug=False):
+        # self.nlp = spacy.load(
+        #     "en_core_web_sm", disable=["tagger", "parser"]
+        # )  # using default tokeniser with NER
+        with open(vocab_path) as f:
             # if want to remove '[unusedXX]' from vocab
             # words = [line.rstrip() for line in f if not line.startswith('[unused')]
             words = [line.rstrip() for line in f]
@@ -53,54 +53,30 @@ class spellChecker(object):
             )
             Token.set_extension("score_spellCheck", getter=self.token_score_spellCheck)
 
-    def token_require_spellCheck(self, token):
-        """Getter for Token attributes. 
-        @Returns True if the token requires spellCheck
-        """
-        return any(
-            [
-                token.orth == suggestion.orth
-                for suggestion in token.doc._.suggestions_spellCheck.keys()
-            ]
-        )
+    def __call__(self, doc):
+        if self.debug:
+            modelLodaded = datetime.datetime.now()
+        misspellTokens, doc = self.misspellIdentify(doc)
+        if self.debug:
+            modelLoadTime = self.timeLog("Misspell identification: ", modelLodaded)
+        if len(misspellTokens) > 0:
+            candidate = self.candidateGenerator(doc, misspellTokens)
+            if self.debug:
+                modelLoadTime = self.timeLog("candidate Generator: ", modelLodaded)
+            answer = self.candidateRanking(candidate)
+            if self.debug:
+                modelLoadTime = self.timeLog("candidate ranking: ", modelLodaded)
+            updatedQuery = ""
+            for i in doc:
+                if i.i in [misspell.i for misspell in misspellTokens]:
+                    updatedQuery += answer[i] + i.whitespace_
+                else:
+                    updatedQuery += i.text_with_ws
 
-    def token_suggestion_spellCheck(self, token):
-        """Getter for Token attributes. 
-        @Returns    [] or List['suggestion-1','suggestion-1',...] 
-                    
-        """
-        for suggestion in token.doc._.suggestions_spellCheck.keys():
-            if token.orth == suggestion.orth:
-                return token.doc._.suggestions_spellCheck[token]
-        return []
-
-    def token_score_spellCheck(self, token):
-        """Getter for Token attributes. 
-        @Returns    [] or List[('suggestion-1',score-1), ('suggestion-1',score-2), ...] 
-                    
-        """
-        for suggestion in token.doc._.score_spellCheck.keys():
-            if token.orth == suggestion.orth:
-                return [token.doc._.score_spellCheck[token]]
-        return []
-
-    def span_score_spellCheck(self, span):
-        return [{token: self.token_score_spellCheck(token)} for token in span]
-
-    def span_require_spellCheck(self, span):
-        """Getter for Token attributes. 
-        @Returns True if the span requires spellCheck
-        """
-        return any([self.token_require_spellCheck(token) for token in span])
-
-    def doc_suggestions_spellCheck(self, doc):
-        response = {}
-        for token in doc._.score_spellCheck:
-            if token not in response:
-                response[token] = []
-            for suggestion_score in doc._.score_spellCheck[token]:
-                response[token].append(suggestion_score[0])
-        return response
+            if self.debug:
+                print("Did you mean: ", updatedQuery)
+            doc._.set("outcome_spellCheck", updatedQuery)
+        return doc
 
     def check(self, query=""):
         """Complete pipeline which returns update query
@@ -112,13 +88,15 @@ class spellChecker(object):
             {str} -- returns updated query with spelling corrections (if any)
         """
         if type(query) != str and len(query) == 0:
-            print("Invalid query, expected non empty `str` but passed", query)
+            return ("Invalid query, expected non empty `str` but passed", query)
 
+        nlp = spacy.load("en_core_web_sm", disable=["tagger", "parser"])
+        doc = nlp(query)
         modelLodaded = datetime.datetime.now()
-        misspellTokens, doc = self.misspellIdentify(query)
+        misspellTokens, doc = self.misspellIdentify(doc)
         modelLoadTime = timeLog("Misspell identification: ", modelLodaded)
         if len(misspellTokens) > 0:
-            candidate = self.candidateGenerator(doc, misspellTokens, query=query)
+            candidate = self.candidateGenerator(doc, misspellTokens)
             answer = self.candidateRanking(candidate)
             updatedQuery = ""
             for i in doc:
@@ -129,10 +107,12 @@ class spellChecker(object):
 
             print("Did you mean: ", updatedQuery)
             doc._.set("outcome_spellCheck", updatedQuery)
-            print("Original text:", query)
+            # problem with below as it modifies the original object
+        #             with doc.retokenize() as retokenizer:
+        #                 print("Original text:",retokenizer.merge(doc[:]))
         return updatedQuery, doc
 
-    def misspellIdentify(self, query=""):
+    def misspellIdentify(self, doc, query=""):
         """To identify misspelled words from the query
 
         At present, All the following criteria should be met for word to be misspelled
@@ -148,13 +128,15 @@ class spellChecker(object):
             {tuple} -- returns `List[`Token`]` and `Doc`
         """
 
-        doc = self.nlp(query)
+        # doc = self.nlp(query)
         misspell = []
         for token in doc:
             if (
                 (token.text.lower() not in self.vocab)
                 and (token.ent_type_ != "PERSON")
                 and (not token.like_num)
+                and (not token.like_email)
+                and (not token.like_url)
             ):
 
                 misspell.append(token)
@@ -163,7 +145,7 @@ class spellChecker(object):
             print(misspell)
         return (misspell, doc)
 
-    def candidateGenerator(self, doc, misspellings, top_n=5, query=""):
+    def candidateGenerator(self, doc, misspellings, top_n=10):
         """Returns Candidates for misspells
 
         This function is responsible for generating candidate list for misspell
@@ -204,12 +186,7 @@ class spellChecker(object):
             )[1]
             token_logits = self.BertModel(model_input)[0]
             mask_token_logits = token_logits[0, mask_token_index, :]
-            if self.debug:
-                print("\nmask_token_logits:", mask_token_logits)
-
             token_probability = torch.nn.functional.softmax(mask_token_logits, dim=1)
-            if self.debug:
-                print("\ntoken_probability: ", token_probability)
             top_n_score, top_n_tokens = torch.topk(token_probability, top_n, dim=1)
             top_n_tokens = top_n_tokens[0].tolist()
             top_n_score = top_n_score[0].tolist()
@@ -277,48 +254,87 @@ class spellChecker(object):
                 print(response)
         return response
 
+    def timeLog(self, fnName, relativeTime):
+        """For time log
 
-def timeLog(fnName, relativeTime):
-    """For time log
+        Arguments:
+            fnName {str} -- function name to print
+            relativeTime {datetime} -- previous date time for subtraction
 
-    Arguments:
-        fnName {str} -- function name to print
-        relativeTime {datetime} -- previous date time for subtraction
+        Returns:
+            datetime -- datetime of current logging
+        """
 
-    Returns:
-        datetime -- datetime of current logging
-    """
+        timeNow = datetime.datetime.now()
+        print(fnName, "took: ", timeNow - relativeTime)
+        return datetime.datetime.now()
 
-    timeNow = datetime.datetime.now()
-    print(fnName, "took: ", timeNow - relativeTime)
-    return datetime.datetime.now()
+    def token_require_spellCheck(self, token):
+        """Getter for Token attributes. 
+        @Returns True if the token requires spellCheck
+        """
+        return any(
+            [
+                token.i == suggestion.i
+                for suggestion in token.doc._.suggestions_spellCheck.keys()
+            ]
+        )
+
+    def token_suggestion_spellCheck(self, token):
+        """Getter for Token attributes. 
+        @Returns    [] or List['suggestion-1','suggestion-1',...] 
+                    
+        """
+        for suggestion in token.doc._.suggestions_spellCheck.keys():
+            if token.i == suggestion.i:
+                return token.doc._.suggestions_spellCheck[token]
+        return []
+
+    def token_score_spellCheck(self, token):
+        """Getter for Token attributes. 
+        @Returns    [] or List[('suggestion-1',score-1), ('suggestion-1',score-2), ...] 
+                    
+        """
+        if token.doc._.score_spellCheck is None:
+            return []
+        for suggestion in token.doc._.score_spellCheck.keys():
+            if token.i == suggestion.i:
+                return [token.doc._.score_spellCheck[token]]
+        return []
+
+    def span_score_spellCheck(self, span):
+        return [{token: self.token_score_spellCheck(token)} for token in span]
+
+    def span_require_spellCheck(self, span):
+        """Getter for Token attributes. 
+        @Returns True if the span requires spellCheck
+        """
+        return any([self.token_require_spellCheck(token) for token in span])
+
+    def doc_suggestions_spellCheck(self, doc):
+        response = {}
+        if doc._.score_spellCheck is None:
+            return response
+        for token in doc._.score_spellCheck:
+            if token not in response:
+                response[token] = []
+            for suggestion_score in doc._.score_spellCheck[token]:
+                response[token].append(suggestion_score[0])
+        return response
 
 
 if __name__ == "__main__":
     print("Code running...")
-    start = datetime.datetime.now()
+    nlp = spacy.load("en_core_web_sm", disable=["tagger", "parser"])
     checker = spellChecker(debug=False)
-    modelLoadTime = timeLog("Model Loading", start)
+    nlp.add_pipe(checker)
 
-    query = "Income was $9.4 milion compared to the prior year of $2.7 milion."
-
-    (updatedQuery, doc) = checker.check(query)
-    checkerTime = timeLog("Sentence Correction", modelLoadTime)
+    doc = nlp(u"Income was $9.4 milion compared to the prior year of $2.7 milion.")
 
     print("=" * 20, "Doc Extention Test", "=" * 20)
+    print(doc._.outcome_spellCheck, "\n")
+
     print(doc._.contextual_spellCheck)
     print(doc._.performed_spellCheck)
     print(doc._.suggestions_spellCheck)
-    print(doc._.outcome_spellCheck)
     print(doc._.score_spellCheck)
-
-    print("=" * 20, "Span Extention Test", "=" * 20)
-    print(checker.token_require_spellCheck(doc[len(doc) - 2]), doc[len(doc) - 2].text)
-    print(doc[len(doc) - 7 : len(doc) - 1]._.get_has_spellCheck)
-    print(doc[len(doc) - 7 : len(doc) - 1]._.score_spellCheck)
-
-    print("=" * 20, "Token Extention Test", "=" * 20)
-    print(checker.token_require_spellCheck(doc[len(doc) - 2]), doc[len(doc) - 2].text)
-    print(doc[len(doc) - 2]._.get_require_spellCheck)
-    print(doc[len(doc) - 2]._.get_suggestion_spellCheck)
-    print(doc[len(doc) - 2]._.score_spellCheck)
