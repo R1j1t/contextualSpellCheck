@@ -1,5 +1,5 @@
 from flask import request
-from oovSpellCheck import spellChecker
+import contextualSpellCheck
 import spacy
 import json
 from flask import Flask, render_template, request, make_response, jsonify
