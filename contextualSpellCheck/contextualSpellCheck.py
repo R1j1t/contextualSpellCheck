@@ -9,7 +9,7 @@ from spacy.vocab import Vocab
 from transformers import AutoModelWithLMHead, AutoTokenizer
 
 
-class spellChecker(object):
+class contextualSpellCheck(object):
     """Class object for Out Of Vocabulary(OOV) corrections 
     """
 
