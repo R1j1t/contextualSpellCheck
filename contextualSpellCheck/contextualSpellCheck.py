@@ -9,7 +9,7 @@ from spacy.vocab import Vocab
 from transformers import AutoModelWithLMHead, AutoTokenizer
 
 
-class contextualSpellCheck(object):
+class ContextualSpellCheck(object):
     """Class object for Out Of Vocabulary(OOV) corrections 
     """
 
@@ -326,7 +326,7 @@ class contextualSpellCheck(object):
 if __name__ == "__main__":
     print("Code running...")
     nlp = spacy.load("en_core_web_sm", disable=["tagger", "parser"])
-    checker = spellChecker(debug=False)
+    checker = contextualSpellCheck(debug=False)
     nlp.add_pipe(checker)
 
     doc = nlp(u"Income was $9.4 milion compared to the prior year of $2.7 milion.")
