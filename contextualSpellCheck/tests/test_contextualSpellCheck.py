@@ -112,12 +112,145 @@ def test_skipURL_misspellIdentify(inputSentence, misspell):
 @pytest.mark.parametrize(
     "inputSentence, misspell",
     [
-        ("eng-movies.com should be skipped", 0),
-        ("bollywood.in should not be in mis spell", 0),
+        ("eng-movies.com shuld be skipped", 0),
+        ("bollywood.in shuld not be in mis spell", 0),
     ],
 )
-def test_skipURL_candidateGenerator(inputSentence, misspell):
-    print("Start URL not in misspell word test\n")
+def test_type_candidateGenerator(inputSentence, misspell):
     doc = nlp(inputSentence)
     misspell, doc = checker.misspellIdentify(doc)
-    assert doc[misspell] not in checker.misspellIdentify(doc)[0]
+    assert type(checker.candidateGenerator(doc, misspell)) == dict
+
+
+@pytest.mark.parametrize(
+    "inputSentence, misspell",
+    [
+        (
+            "Income was $9.4 milion compared to the prior year of $2.7 milion.",
+            {
+                4: [
+                    "million",
+                    "billion",
+                    ",",
+                    "trillion",
+                    "Million",
+                    "%",
+                    "##M",
+                    "annually",
+                    "##B",
+                    "USD",
+                ],
+                13: [
+                    "billion",
+                    "million",
+                    "trillion",
+                    "##M",
+                    "Million",
+                    "##B",
+                    "USD",
+                    "##b",
+                    "millions",
+                    "%",
+                ],
+            },
+        ),
+        (
+            "This packge was introduced in 2020",
+            {
+                1: [
+                    "system",
+                    "model",
+                    "version",
+                    "technology",
+                    "program",
+                    "standard",
+                    "class",
+                    "feature",
+                    "plan",
+                    "service",
+                ]
+            },
+        ),
+    ],
+)
+def test_identify_candidateGenerator(inputSentence, misspell):
+    print("Start misspell word identifation test\n")
+    doc = nlp(inputSentence)
+    (misspellings, doc) = checker.misspellIdentify(doc)
+    suggestions = checker.candidateGenerator(doc, misspellings)
+    gold_suggestions = {doc[key]: value for key, value in misspell.items()}
+    assert suggestions == gold_suggestions
+
+
+@pytest.mark.parametrize(
+    "inputSentence, misspell",
+    [
+        ("Income was $9.4 milion compared to the prior year of $2.7 milion.", True),
+        ("This package was introduced in 2020", False),
+    ],
+)
+def test_extension_candidateGenerator(inputSentence, misspell):
+    doc = nlp(inputSentence)
+    (misspellings, doc) = checker.misspellIdentify(doc)
+    suggestions = checker.candidateGenerator(doc, misspellings)
+    assert doc._.performed_spellCheck == misspell
+
+
+@pytest.mark.parametrize(
+    "inputSentence, misspell",
+    [
+        (
+            "Income was $9.4 milion compared to the prior year of $2.7 milion.",
+            {
+                4: [
+                    ("million", 0.59422),
+                    ("billion", 0.24349),
+                    (",", 0.08809),
+                    ("trillion", 0.01835),
+                    ("Million", 0.00826),
+                    ("%", 0.00672),
+                    ("##M", 0.00591),
+                    ("annually", 0.0038),
+                    ("##B", 0.00205),
+                    ("USD", 0.00113),
+                ],
+                13: [
+                    ("billion", 0.65934),
+                    ("million", 0.26185),
+                    ("trillion", 0.05391),
+                    ("##M", 0.0051),
+                    ("Million", 0.00425),
+                    ("##B", 0.00268),
+                    ("USD", 0.00153),
+                    ("##b", 0.00077),
+                    ("millions", 0.00059),
+                    ("%", 0.00041),
+                ],
+            },
+        ),
+        (
+            "This packge was introduced in 2020",
+            {
+                1: [
+                    ("system", 0.0876),
+                    ("model", 0.04924),
+                    ("version", 0.04367),
+                    ("technology", 0.03086),
+                    ("program", 0.01936),
+                    ("standard", 0.01607),
+                    ("class", 0.01557),
+                    ("feature", 0.01527),
+                    ("plan", 0.01435),
+                    ("service", 0.01351),
+                ]
+            },
+        ),
+    ],
+)
+def test_extension2_candidateGenerator(inputSentence, misspell):
+    doc = nlp(inputSentence)
+    (misspellings, doc) = checker.misspellIdentify(doc)
+    suggestions = checker.candidateGenerator(doc, misspellings)
+    assert doc._.score_spellCheck == {
+        doc[key]: value for key, value in misspell.items()
+    }
