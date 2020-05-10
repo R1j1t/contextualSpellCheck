@@ -54,6 +54,14 @@ class ContextualSpellCheck(object):
             Token.set_extension("score_spellCheck", getter=self.token_score_spellCheck)
 
     def __call__(self, doc):
+        """call function for the class. Used in spacy pipeline
+
+        Arguments:
+            doc {`Spacy.Doc`} -- Spacy Doc Object
+
+        Returns:
+            `Spacy.Doc` -- Updated doc object with custom extensions values
+        """
         if self.debug:
             modelLodaded = datetime.datetime.now()
         misspellTokens, doc = self.misspellIdentify(doc)
@@ -79,13 +87,13 @@ class ContextualSpellCheck(object):
         return doc
 
     def check(self, query=""):
-        """Complete pipeline which returns update query
+        """Complete pipeline for **testing purpose only**
 
         Keyword Arguments:
-            query {str} -- User query for which spell checking to be done (default: {''})
+            query {str} -- query for which spell check model to run (default: {""})
 
         Returns:
-            {str} -- returns updated query with spelling corrections (if any)
+            (str, `Doc`) -- returns updated query (if no oov words then "") and updated Doc Object
         """
         if type(query) != str and len(query) == 0:
             return ("Invalid query, expected non empty `str` but passed", query)
@@ -95,10 +103,10 @@ class ContextualSpellCheck(object):
         modelLodaded = datetime.datetime.now()
         misspellTokens, doc = self.misspellIdentify(doc)
         modelLoadTime = timeLog("Misspell identification: ", modelLodaded)
+        updatedQuery = ""
         if len(misspellTokens) > 0:
             candidate = self.candidateGenerator(doc, misspellTokens)
             answer = self.candidateRanking(candidate)
-            updatedQuery = ""
             for i in doc:
                 if i in misspellTokens:
                     updatedQuery += answer[i] + i.whitespace_
@@ -116,17 +124,20 @@ class ContextualSpellCheck(object):
         """To identify misspelled words from the query
 
         At present, All the following criteria should be met for word to be misspelled
-        1. Should not in our vocab
+        1. Should not be in our vocab
         2. should not be a Person
         3. Should not be a number
+        4. Should not be a url
 
+        Arguments:
+            doc {`Spacy.Doc`} -- Spacy doc object as input
 
         Keyword Arguments:
-            query {str} -- user query eg: "aa bb cc..." (default: {''})
+            query {str} -- not used now (default: {""})
 
         Returns:
-            {tuple} -- returns `List[`Token`]` and `Doc`
-        """
+            `tuple` -- returns `List[`Spacy.Token`]` and `Spacy.Doc`
+        """ 
 
         # doc = self.nlp(query)
         misspell = []
@@ -146,25 +157,24 @@ class ContextualSpellCheck(object):
         return (misspell, doc)
 
     def candidateGenerator(self, doc, misspellings, top_n=10):
-        """Returns Candidates for misspells
+        """Returns Candidates for misspell words
 
         This function is responsible for generating candidate list for misspell
-        using BERT. The misspell is masked with a token and the model tries to 
-        predict `n` candidates for the mask.
+        using BERT. The misspell is masked with a token (eg [MASK]) and the model tries to 
+        predict `n` candidates for that mask. The `doc` is used to provide sentence (context) for the mask
+
 
         Arguments:
-            misspellings {List[`Token`]} -- Contains List of `Token` object types 
-            from spacy to preserve meta information of the token 
+            doc {`Spacy.Doc`} -- Spacy Doc object, used to provide context to the model
+            misspellings {List(`Spacy.Token`)} -- Contains List of `Token` object types from spacy to preserve meta information of the token 
 
         Keyword Arguments:
-            top_n {int} -- Number of candidates to be generated (default: {5})
-            query {User query} -- This is used for context pwered candidate generations.  (default: {''})
+            top_n {int} -- # suggestions to be considered (default: {10})
 
         Returns:
             Dict{`Token`:List[{str}]} -- Eg of return type {misspell-1:['candidate-1','candidate-2', ...],
                             misspell-2:['candidate-1','candidate-2'. ...]}
         """
-
         response = {}
         score = {}
 
@@ -272,7 +282,12 @@ class ContextualSpellCheck(object):
 
     def token_require_spellCheck(self, token):
         """Getter for Token attributes. 
-        @Returns True if the token requires spellCheck
+
+        Arguments:
+            token {`Spacy.Token`} -- Token object for the value should be returned
+
+        Returns:
+            List -- If no suggestions: False else: True
         """
         return any(
             [
@@ -283,8 +298,12 @@ class ContextualSpellCheck(object):
 
     def token_suggestion_spellCheck(self, token):
         """Getter for Token attributes. 
-        @Returns    [] or List['suggestion-1','suggestion-1',...] 
-                    
+
+        Arguments:
+            token {`Spacy.Token`} -- Token object for the value should be returned
+
+        Returns:
+            List -- If no suggestions: [] else: List['suggestion-1','suggestion-1',...] 
         """
         for suggestion in token.doc._.suggestions_spellCheck.keys():
             if token.i == suggestion.i:
@@ -293,8 +312,12 @@ class ContextualSpellCheck(object):
 
     def token_score_spellCheck(self, token):
         """Getter for Token attributes. 
-        @Returns    [] or List[('suggestion-1',score-1), ('suggestion-1',score-2), ...] 
-                    
+
+        Arguments:
+            token {`Spacy.Token`} -- Token object for the value should be returned
+
+        Returns:
+            List -- If no suggestions: [] else: List[('suggestion-1',score-1), ('suggestion-1',score-2), ...] 
         """
         if token.doc._.score_spellCheck is None:
             return []
@@ -304,15 +327,36 @@ class ContextualSpellCheck(object):
         return []
 
     def span_score_spellCheck(self, span):
+        """Getter for Span Object
+
+        Arguments:
+            span {`Spacy.Span`} -- Span object for which value should be returned
+
+        Returns:
+            List(Dict(`Token`:List(str,int))) -- for every token it will return (suggestion,score) eg: [{token-1: []}, {token-2: []}, {token-3: [('suggestion-1', score-1),]}] 
+        """
         return [{token: self.token_score_spellCheck(token)} for token in span]
 
     def span_require_spellCheck(self, span):
-        """Getter for Token attributes. 
-        @Returns True if the span requires spellCheck
+        """Getter for Span Object
+
+        Arguments:
+            span {`Spacy.Span`} -- Span object for which value should be returned
+
+        Returns:
+            Boolean -- True if the span requires spellCheck
         """
         return any([self.token_require_spellCheck(token) for token in span])
 
     def doc_suggestions_spellCheck(self, doc):
+        """Getter for Doc attribute
+
+        Arguments:
+            doc {`Spacy.Doc`} -- Doc object for which value should be returned
+
+        Returns:
+            Dict(`Spacy.Token`:List(str)) -- {misspell-1: ['suggestion-1', 'suggestion-2'...]}
+        """
         response = {}
         if doc._.score_spellCheck is None:
             return response
