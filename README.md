@@ -14,7 +14,12 @@ This package currently focuses on Out of Vocabulary (OOV) word or non word error
 
 ## Install 
 
-The package can be installed using pip
+The package can be installed using [pip](https://pypi.org/project/contextualSpellCheck/). You would require python 3.6+
+
+```bash
+pip install contextualSpellCheck
+```
+Also, please install the dependencies from requirements.txt
 
 ## Usage
 
