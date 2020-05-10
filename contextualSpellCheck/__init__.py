@@ -6,5 +6,5 @@ __all__ = ["ContextualSpellCheck", "add_to_pipe"]
 
 def add_to_pipe(nlp, **kwargs):
     checker = ContextualSpellCheck()
-    nlp.add_pipe(checker, name="ContextualSpellCheck")
+    nlp.add_pipe(checker)
     return nlp
