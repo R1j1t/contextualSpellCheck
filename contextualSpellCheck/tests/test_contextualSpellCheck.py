@@ -23,18 +23,101 @@ user_name = []  # variable that stores person name
     ],
 )
 def test_no_misspellIdentify(inputSentence, misspell):
-    print("Start misspellIdentify test\n")
+    print("Start no spelling mistake test\n")
     doc = nlp(inputSentence)
     assert checker.misspellIdentify(doc) == (misspell, doc)
 
 
 @pytest.mark.parametrize(
     "inputSentence, misspell",
-    [("Income was $9.4 million compared to the prior year of $2.7 million.", [])],
+    [("Income was $9.4 milion compared to the prior year of $2.7 milion.", [4, 13])],
 )
 def test_type_misspellIdentify(inputSentence, misspell):
-    print("Start misspellIdentify test\n")
+    print("Start type correction test for spelling mistake identification\n")
     doc = nlp(inputSentence)
     assert type(checker.misspellIdentify(doc)[0]) == type(misspell)
     assert type(checker.misspellIdentify(doc)[1]) == type(doc)
     assert checker.misspellIdentify(doc)[1] == doc
+
+
+@pytest.mark.parametrize(
+    "inputSentence, misspell",
+    [
+        ("Income was $9.4 milion compared to the prior year of $2.7 milion.", [4, 13]),
+        ("This packge was cretaed in 2020", [1, 3]),
+    ],
+)
+def test_identify_misspellIdentify(inputSentence, misspell):
+    print("Start misspell word identifation test\n")
+    doc = nlp(inputSentence)
+    assert checker.misspellIdentify(doc)[0] == [doc[i] for i in misspell]
+
+
+@pytest.mark.parametrize(
+    "inputSentence, misspell",
+    [
+        ("Income was $9.4 milion compared to the prior year of $2.7 milion.", 3),
+        ("Income was $9.4 milion compared to the prior year of $2.7 milion.", 12),
+        ("This packge was cretaed in 2020", 5),
+    ],
+)
+def test_skipNumber_misspellIdentify(inputSentence, misspell):
+    print("Start number not in misspell word test\n")
+    doc = nlp(inputSentence)
+    # Number should not be skipped for misspell
+    assert doc[misspell] not in checker.misspellIdentify(doc)[0]
+
+
+@pytest.mark.parametrize(
+    "inputSentence, misspell",
+    [
+        ("Mr Bond should be skipped", 1),
+        ("Amitabh Bachan should not be in mis spell", 0),
+        ("Amitabh Bachan shuld not be in mis spell", 1),
+    ],
+)
+def test_skipName_misspellIdentify(inputSentence, misspell):
+    print("Start name not in misspell word test\n")
+    doc = nlp(inputSentence)
+    # Number should not be skipped for misspell
+    assert doc[misspell] not in checker.misspellIdentify(doc)[0]
+
+
+@pytest.mark.parametrize(
+    "inputSentence, misspell",
+    [
+        ("Bond@movies.com should be skipped", 0),
+        ("Amitabh.Bachan@bollywood.in should not be in mis spell", 0),
+    ],
+)
+def test_skipEmail_misspellIdentify(inputSentence, misspell):
+    print("Start Email not in misspell word test\n")
+    doc = nlp(inputSentence)
+    assert doc[misspell] not in checker.misspellIdentify(doc)[0]
+
+
+@pytest.mark.parametrize(
+    "inputSentence, misspell",
+    [
+        ("eng-movies.com should be skipped", 0),
+        ("bollywood.in should not be in mis spell", 0),
+    ],
+)
+def test_skipURL_misspellIdentify(inputSentence, misspell):
+    print("Start URL not in misspell word test\n")
+    doc = nlp(inputSentence)
+    assert doc[misspell] not in checker.misspellIdentify(doc)[0]
+
+
+@pytest.mark.parametrize(
+    "inputSentence, misspell",
+    [
+        ("eng-movies.com should be skipped", 0),
+        ("bollywood.in should not be in mis spell", 0),
+    ],
+)
+def test_skipURL_candidateGenerator(inputSentence, misspell):
+    print("Start URL not in misspell word test\n")
+    doc = nlp(inputSentence)
+    misspell, doc = checker.misspellIdentify(doc)
+    assert doc[misspell] not in checker.misspellIdentify(doc)[0]
