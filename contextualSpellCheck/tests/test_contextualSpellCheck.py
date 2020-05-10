@@ -254,3 +254,21 @@ def test_extension2_candidateGenerator(inputSentence, misspell):
     assert doc._.score_spellCheck == {
         doc[key]: value for key, value in misspell.items()
     }
+
+
+@pytest.mark.parametrize(
+    "inputSentence, misspell",
+    [
+        (
+            "Income was $9.4 milion compared to the prior year of $2.7 milion.",
+            {4: "million", 13: "million"},
+        ),
+        ("This package was introduced in 2020", {}),
+    ],
+)
+def test_ranking_candidateRanking(inputSentence, misspell):
+    doc = nlp(inputSentence)
+    (misspellings, doc) = checker.misspellIdentify(doc)
+    suggestions = checker.candidateGenerator(doc, misspellings)
+    selectedWord = checker.candidateRanking(suggestions)
+    assert selectedWord == {doc[key]: value for key, value in misspell.items()}
