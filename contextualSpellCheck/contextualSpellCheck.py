@@ -214,8 +214,9 @@ class ContextualSpellCheck(object):
             if self.debug:
                 print("\nresponse: ", response, "\nscore: ", score)
 
-        doc._.set("performed_spellCheck", True)
-        doc._.set("score_spellCheck", score)
+        if len(misspellings) != 0:
+            doc._.set("performed_spellCheck", True)
+            doc._.set("score_spellCheck", score)
 
         return response
 
