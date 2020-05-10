@@ -10,8 +10,6 @@ from contextualSpellCheck.contextualSpellCheck import ContextualSpellCheck
 nlp = spacy.load("en_core_web_sm", disable=["tagger", "parser"])
 
 checker = ContextualSpellCheck()  # instantiate the Person Class
-user_id = []  # variable that stores obtained user_id
-user_name = []  # variable that stores person name
 
 
 @pytest.mark.parametrize(
@@ -272,3 +270,141 @@ def test_ranking_candidateRanking(inputSentence, misspell):
     suggestions = checker.candidateGenerator(doc, misspellings)
     selectedWord = checker.candidateRanking(suggestions)
     assert selectedWord == {doc[key]: value for key, value in misspell.items()}
+
+
+def test_compatible_spacyPipeline():
+    nlp.add_pipe(checker)
+    assert "contextual spellchecker" in nlp.pipe_names
+
+    nlp.remove_pipe("contextual spellchecker")
+    assert "contextual spellchecker" not in nlp.pipe_names
+
+
+def test_doc_extensions():
+    nlp.add_pipe(checker)
+    doc = nlp(u"Income was $9.4 milion compared to the prior year of $2.7 milion.")
+
+    gold_suggestion = {
+        doc[4]: [
+            "million",
+            "billion",
+            ",",
+            "trillion",
+            "Million",
+            "%",
+            "##M",
+            "annually",
+            "##B",
+            "USD",
+        ],
+        doc[13]: [
+            "billion",
+            "million",
+            "trillion",
+            "##M",
+            "Million",
+            "##B",
+            "USD",
+            "##b",
+            "millions",
+            "%",
+        ],
+    }
+    gold_outcome = "Income was $9.4 million compared to the prior year of $2.7 million."
+    gold_score = {
+        doc[4]: [
+            ("million", 0.59422),
+            ("billion", 0.24349),
+            (",", 0.08809),
+            ("trillion", 0.01835),
+            ("Million", 0.00826),
+            ("%", 0.00672),
+            ("##M", 0.00591),
+            ("annually", 0.0038),
+            ("##B", 0.00205),
+            ("USD", 0.00113),
+        ],
+        doc[13]: [
+            ("billion", 0.65934),
+            ("million", 0.26185),
+            ("trillion", 0.05391),
+            ("##M", 0.0051),
+            ("Million", 0.00425),
+            ("##B", 0.00268),
+            ("USD", 0.00153),
+            ("##b", 0.00077),
+            ("millions", 0.00059),
+            ("%", 0.00041),
+        ],
+    }
+    assert doc._.contextual_spellCheck == True
+    assert doc._.performed_spellCheck == True
+    assert doc._.suggestions_spellCheck == gold_suggestion
+    assert doc._.outcome_spellCheck == gold_outcome
+    assert doc._.score_spellCheck == gold_score
+    nlp.remove_pipe("contextual spellchecker")
+
+
+def test_span_extensions():
+    nlp.add_pipe(checker)
+    doc = nlp("Income was $9.4 milion compared to the prior year of $2.7 milion.")
+
+    gold_score = [
+        {doc[2]: []},
+        {doc[3]: []},
+        {
+            doc[4]: [
+                ("million", 0.59422),
+                ("billion", 0.24349),
+                (",", 0.08809),
+                ("trillion", 0.01835),
+                ("Million", 0.00826),
+                ("%", 0.00672),
+                ("##M", 0.00591),
+                ("annually", 0.0038),
+                ("##B", 0.00205),
+                ("USD", 0.00113),
+            ]
+        },
+        {doc[5]: []},
+    ]
+
+    assert doc[2:6]._.get_has_spellCheck == True
+    assert doc[2:6]._.score_spellCheck == gold_score
+    nlp.remove_pipe("contextual spellchecker")
+
+
+def test_token_extension():
+    if "contextual spellchecker" not in nlp.pipe_names:
+        nlp.add_pipe(checker)
+    doc = nlp("Income was $9.4 milion compared to the prior year of $2.7 milion.")
+
+    gold_suggestions = [
+        "million",
+        "billion",
+        ",",
+        "trillion",
+        "Million",
+        "%",
+        "##M",
+        "annually",
+        "##B",
+        "USD",
+    ]
+    gold_score = [
+        ("million", 0.59422),
+        ("billion", 0.24349),
+        (",", 0.08809),
+        ("trillion", 0.01835),
+        ("Million", 0.00826),
+        ("%", 0.00672),
+        ("##M", 0.00591),
+        ("annually", 0.0038),
+        ("##B", 0.00205),
+        ("USD", 0.00113),
+    ]
+
+    assert doc[4]._.get_require_spellCheck == True
+    assert doc[4]._.get_suggestion_spellCheck == gold_suggestions
+    assert doc[4]._.score_spellCheck == gold_score
+    nlp.remove_pipe("contextual spellchecker")
