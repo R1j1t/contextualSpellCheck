@@ -300,7 +300,7 @@ class ContextualSpellCheck(object):
             return []
         for suggestion in token.doc._.score_spellCheck.keys():
             if token.i == suggestion.i:
-                return [token.doc._.score_spellCheck[token]]
+                return token.doc._.score_spellCheck[token]
         return []
 
     def span_score_spellCheck(self, span):
