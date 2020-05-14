@@ -2,7 +2,7 @@
 
 Contextual word checker for better suggestions
 
-![GitHub](https://img.shields.io/github/license/r1j1t/contextualSpellCheck) ![PyPI](https://img.shields.io/pypi/v/contextualSpellCheck?color=green)
+[![GitHub](https://img.shields.io/github/license/r1j1t/contextualSpellCheck)](https://github.com/R1j1t/contextualSpellCheck/blob/master/LICENSE) [![PyPI](https://img.shields.io/pypi/v/contextualSpellCheck?color=green)](https://pypi.org/project/contextualSpellCheck/) [![PyPI - Downloads](https://img.shields.io/pypi/dm/contextualSpellCheck)](https://pypi.org/project/contextualSpellCheck/)
 
 ## Types of spelling mistakes
 
