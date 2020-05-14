@@ -12,7 +12,7 @@ It is important to understand that, identifying the candidate is a big task. You
 >
 > -- [Monojit Choudhury et. al. (2007)][1]
 
-This package currently focuses on Out of Vocabulary (OOV) word or non word error (NWE) correction using BERT model. The idea of using BERT was to use the context when correcting OOV. In the future we the package gets traction, I would like to focus on RWE.
+This package currently focuses on Out of Vocabulary (OOV) word or non word error (NWE) correction using BERT model. The idea of using BERT was to use the context when correcting OOV. In the future if the package gets traction, I would like to focus on RWE.
 
 ## Install
 

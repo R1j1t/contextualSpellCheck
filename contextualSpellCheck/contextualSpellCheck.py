@@ -15,7 +15,7 @@ class ContextualSpellCheck(object):
 
     name = "contextual spellchecker"
 
-    def __init__(self, vocab_path="./data/vocab.txt", debug=False):
+    def __init__(self, vocab_path="../data/vocab.txt", debug=False):
         # self.nlp = spacy.load(
         #     "en_core_web_sm", disable=["tagger", "parser"]
         # )  # using default tokeniser with NER
@@ -371,7 +371,7 @@ class ContextualSpellCheck(object):
 if __name__ == "__main__":
     print("Code running...")
     nlp = spacy.load("en_core_web_sm", disable=["tagger", "parser"])
-    checker = contextualSpellCheck(debug=False)
+    checker = ContextualSpellCheck(debug=False)
     nlp.add_pipe(checker)
 
     doc = nlp(u"Income was $9.4 milion compared to the prior year of $2.7 milion.")
