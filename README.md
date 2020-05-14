@@ -1,5 +1,5 @@
 # spellCheck
-<a href="https://github.com/R1j1t/contextualSpellCheck"><img src="./assets/logo.png" width="138" height="60" align="right" /></a>
+<a href="https://github.com/R1j1t/contextualSpellCheck"><img src="./assets/logo.png" width="276" height="120" align="right" /></a>
 
 Contextual word checker for better suggestions
 
