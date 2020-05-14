@@ -15,7 +15,7 @@ class ContextualSpellCheck(object):
 
     name = "contextual spellchecker"
 
-    def __init__(self, vocab_path="../data/vocab.txt", debug=False):
+    def __init__(self, vocab_path="./data/vocab.txt", debug=False):
         # self.nlp = spacy.load(
         #     "en_core_web_sm", disable=["tagger", "parser"]
         # )  # using default tokeniser with NER
