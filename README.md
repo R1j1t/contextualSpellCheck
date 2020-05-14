@@ -41,6 +41,24 @@ Also, please install the dependencies from requirements.txt
 ['ner', 'contextual spellchecker']
 ```
 
+Or you can add to spaCy pipeline manually!
+
+```bash
+>>> import spacy
+>>> import contextualSpellCheck
+>>> 
+>>> nlp = spacy.load('en')
+>>> checker = contextualSpellCheck.contextualSpellCheck.ContextualSpellCheck()
+>>> nlp.add_pipe(checker)
+>>> 
+>>> doc = nlp("Income was $9.4 milion compared to the prior year of $2.7 milion.")
+>>> print(doc._.performed_spellCheck)
+True
+>>> print(doc._.outcome_spellCheck)
+Income was $9.4 million compared to the prior year of $2.7 million.
+
+```
+
 After adding contextual spell checker in the pipeline, you use the pipeline normally. The spell check suggestions and other data can be accessed using extensions.
 
 ### Using the pipeline
