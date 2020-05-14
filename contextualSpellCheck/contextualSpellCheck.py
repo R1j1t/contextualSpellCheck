@@ -137,7 +137,7 @@ class ContextualSpellCheck(object):
 
         Returns:
             `tuple` -- returns `List[`Spacy.Token`]` and `Spacy.Doc`
-        """ 
+        """
 
         # doc = self.nlp(query)
         misspell = []

@@ -2,7 +2,9 @@
 
 Contextual word checker for better suggestions
 
-## Types of spelling mistakes:
+![GitHub](https://img.shields.io/github/license/r1j1t/contextualSpellCheck) ![PyPI](https://img.shields.io/pypi/v/contextualSpellCheck?color=green)
+
+## Types of spelling mistakes
 
 It is important to understand that, identifying the candidate is a big task. You can see the below quote from a research paper:
 
@@ -12,18 +14,20 @@ It is important to understand that, identifying the candidate is a big task. You
 
 This package currently focuses on Out of Vocabulary (OOV) word or non word error (NWE) correction using BERT model. The idea of using BERT was to use the context when correcting OOV. In the future we the package gets traction, I would like to focus on RWE.
 
-## Install 
+## Install
 
 The package can be installed using [pip](https://pypi.org/project/contextualSpellCheck/). You would require python 3.6+
 
 ```bash
 pip install contextualSpellCheck
 ```
+
 Also, please install the dependencies from requirements.txt
 
 ## Usage
 
 ### How to load the package in spacy pipeline
+
 ```bash
 >>> import contextualSpellCheck
 >>> import spacy
@@ -69,10 +73,7 @@ True
 True
 >>> print(doc[2:6]._.score_spellCheck)
 [{$: []}, {9.4: []}, {milion: [('million', 0.59422), ('billion', 0.24349), (',', 0.08809), ('trillion', 0.01835), ('Million', 0.00826), ('%', 0.00672), ('##M', 0.00591), ('annually', 0.0038), ('##B', 0.00205), ('USD', 0.00113)]}, {compared: []}]
->>> 
->>> 
 ```
-
 
 ## API
 
@@ -110,9 +111,21 @@ At present, there is a get API in a flask app. You can run the app and expect th
 }
 ```
 
+## Task List
+
+- [ ] Add support for Real Word Error (RWE) (Big Task)
+- [ ] specify maximum edit distance for `candidateRanking`
+- [ ] allow user to specify bert model
+- [ ] edit distance code optimisation
+- [ ] add multi mask out capability
+- [ ] better candidate generation (maybe by fine tuning the model?)
+- [ ] add metric by testing on datasets
+- [ ] Improve documentation
+
 ## Reference
 
 Below are some of the projects/work I refered to while developing this package
+
 1. Spacy Documentation and [custom attributes](https://course.spacy.io/en/chapter3)
 2. [HuggingFace's Transformers](https://github.com/huggingface/transformers)
 3. [Norvig's Blog](http://norvig.com/spell-correct.html)
@@ -121,6 +134,5 @@ Below are some of the projects/work I refered to while developing this package
 6. CONTEXT BASED SPELLING CORRECTION (1990)
 7. [How Difficult is it to Develop a Perfect Spell-checker? A Cross-linguistic Analysis through Complex Network Approach](http://citeseerx.ist.psu.edu/viewdoc/download;?doi=10.1.1.146.4390&rep=rep1&type=pdf)
 8. [HuggingFace's neuralcoref](https://github.com/huggingface/neuralcoref) for package design and some of the functions are inspired from them (like add_to_pipe which is an amazing idea!)
-
 
 [1]: <http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=52A3B869596656C9DA285DCE83A0339F?doi=10.1.1.146.4390&rep=rep1&type=pdf>

@@ -24,7 +24,6 @@ setuptools.setup(
         "Intended Audience :: Education",
         "Intended Audience :: Science/Research",
         "Development Status :: 4 - Beta",
-        
     ],
     python_requires=">=3.6",
 )
