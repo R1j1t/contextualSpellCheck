@@ -2,6 +2,7 @@ import spacy
 import torch
 import editdistance
 import datetime
+import os
 
 from spacy.tokens import Doc, Token, Span
 from spacy.vocab import Vocab
@@ -15,7 +16,10 @@ class ContextualSpellCheck(object):
 
     name = "contextual spellchecker"
 
-    def __init__(self, vocab_path="./data/vocab.txt", debug=False):
+    def __init__(self, vocab_path="", debug=False):
+        if vocab_path == "":
+            currentPath = os.path.dirname(__file__)
+            vocab_path = os.path.join(currentPath, 'data/vocab.txt')
         # self.nlp = spacy.load(
         #     "en_core_web_sm", disable=["tagger", "parser"]
         # )  # using default tokeniser with NER
