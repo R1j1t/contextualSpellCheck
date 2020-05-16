@@ -3,7 +3,7 @@
 
 Contextual word checker for better suggestions
 
-[![GitHub](https://img.shields.io/github/license/r1j1t/contextualSpellCheck)](https://github.com/R1j1t/contextualSpellCheck/blob/master/LICENSE) [![PyPI](https://img.shields.io/pypi/v/contextualSpellCheck?color=green)](https://pypi.org/project/contextualSpellCheck/) [![PyPI - Downloads](https://img.shields.io/pypi/dm/contextualSpellCheck)](https://pypi.org/project/contextualSpellCheck/)
+[![GitHub](https://img.shields.io/github/license/r1j1t/contextualSpellCheck)](https://github.com/R1j1t/contextualSpellCheck/blob/master/LICENSE) [![PyPI](https://img.shields.io/pypi/v/contextualSpellCheck?color=green)](https://pypi.org/project/contextualSpellCheck/) [![PyPI - Downloads](https://img.shields.io/pypi/dm/contextualSpellCheck)](https://pypi.org/project/contextualSpellCheck/) [![GitHub contributors](https://img.shields.io/github/contributors/r1j1t/contextualSpellCheck)](https://github.com/R1j1t/contextualSpellCheck/graphs/contributors) [![Python](https://img.shields.io/badge/Python-3.6+-green)](https://github.com/R1j1t/contextualSpellCheck#install)
 
 ## Types of spelling mistakes
 
@@ -93,6 +93,34 @@ True
 >>> print(doc[2:6]._.score_spellCheck)
 [{$: []}, {9.4: []}, {milion: [('million', 0.59422), ('billion', 0.24349), (',', 0.08809), ('trillion', 0.01835), ('Million', 0.00826), ('%', 0.00672), ('##M', 0.00591), ('annually', 0.0038), ('##B', 0.00205), ('USD', 0.00113)]}, {compared: []}]
 ```
+
+## Extensions
+
+To make the usage simpler spacy provides custom extesnions which a library can use. This make it easier for the user to get the resired data. contextualSpellCheck, provides extensions on `doc`, `span` and `token` level. Below tables summaries the extensions. 
+
+### `spaCy.Doc` level extensions
+
+| Extension | Type | Description | Default |
+|------------------------------|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
+| doc._.contextual_spellCheck | `Boolean` | To check whether contextualSpellCheck is added as extension | `True` |
+| doc._.performed_spellCheck | `Boolean` | To check whether contextualSpellCheck identified any misspells and performed correction | `False` |
+| doc._.suggestions_spellCheck | {`Spacy.Token`:List(str)} | if corrections are performed, it returns the mapping of misspell token (`spaCy.Token`) with suggested words(`str`) | `{}` |
+| doc._.outcome_spellCheck | `str` | corrected sentence(`str`) as output | `""` |
+| doc._.score_spellCheck | {`Spacy.Token`:List(str,float)} | if corrections are performed, it returns the mapping of misspell token (`spaCy.Token`) with suggested words(`str`) and probability of that correction | `None` |
+
+### `spaCy.Span` level extensions
+| Extension | Type | Description | Default |
+|-------------------------------|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------|
+| span._.get_has_spellCheck | `Boolean` | To check whether contextualSpellCheck identified any misspells and performed correction in this span | `False` |
+| span._.score_spellCheck | `{Spacy.Token:List(str,float)}` | if corrections are performed, it returns the mapping of misspell token (`spaCy.Token`) with suggested words(`str`) and probability of that correction for tokens in this `span` | `[{spaCy.Token: []}` |
+
+### `spaCy.Token` level extensions
+
+| Extension | Type | Description | Default |
+|-----------------------------------|---------------------------|-------------------------------------------------------------------------------------------------------------|---------|
+| token._.get_require_spellCheck | `Boolean` | To check whether contextualSpellCheck identified any misspells and performed correction on this `token` | `False` |
+| token._.get_suggestion_spellCheck | `{Spacy.Token:List(str)}` | if corrections are performed, it returns list of suggested words(`str`) | `[]` |
+| token._.score_spellCheck | `[(str,float)]` | if corrections are performed, it returns suggested words(`str`) and probability(`float`) of that correction | `[]` |
 
 ## API
 
