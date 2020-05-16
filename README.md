@@ -104,15 +104,15 @@ To make the usage simpler spacy provides custom extesnions which a library can u
 |------------------------------|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
 | doc._.contextual_spellCheck | `Boolean` | To check whether contextualSpellCheck is added as extension | `True` |
 | doc._.performed_spellCheck | `Boolean` | To check whether contextualSpellCheck identified any misspells and performed correction | `False` |
-| doc._.suggestions_spellCheck | {`Spacy.Token`:List(str)} | if corrections are performed, it returns the mapping of misspell token (`spaCy.Token`) with suggested words(`str`) | `{}` |
+| doc._.suggestions_spellCheck | `{Spacy.Token:List(str)}` | if corrections are performed, it returns the mapping of misspell token (`spaCy.Token`) with suggested words(`str`) | `{}` |
 | doc._.outcome_spellCheck | `str` | corrected sentence(`str`) as output | `""` |
-| doc._.score_spellCheck | {`Spacy.Token`:List(str,float)} | if corrections are performed, it returns the mapping of misspell token (`spaCy.Token`) with suggested words(`str`) and probability of that correction | `None` |
+| doc._.score_spellCheck | `{Spacy.Token:List(str,float)}` | if corrections are performed, it returns the mapping of misspell token (`spaCy.Token`) with suggested words(`str`) and probability of that correction | `None` |
 
 ### `spaCy.Span` level extensions
 | Extension | Type | Description | Default |
 |-------------------------------|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------|
 | span._.get_has_spellCheck | `Boolean` | To check whether contextualSpellCheck identified any misspells and performed correction in this span | `False` |
-| span._.score_spellCheck | `{Spacy.Token:List(str,float)}` | if corrections are performed, it returns the mapping of misspell token (`spaCy.Token`) with suggested words(`str`) and probability of that correction for tokens in this `span` | `[{spaCy.Token: []}` |
+| span._.score_spellCheck | `{Spacy.Token:List(str,float)}` | if corrections are performed, it returns the mapping of misspell token (`spaCy.Token`) with suggested words(`str`) and probability of that correction for tokens in this `span` | `[{spaCy.Token: []}]` |
 
 ### `spaCy.Token` level extensions
 
