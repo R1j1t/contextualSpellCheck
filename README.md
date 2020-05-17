@@ -1,5 +1,5 @@
 # spellCheck
-<a href="https://github.com/R1j1t/contextualSpellCheck"><img src="./assets/logo.png" width="276" height="120" align="right" /></a>
+<a href="https://github.com/R1j1t/contextualSpellCheck"><img src="https://user-images.githubusercontent.com/22280243/82138959-2852cd00-9842-11ea-918a-49b2a7873ef6.png" width="276" height="120" align="right" /></a>
 
 Contextual word checker for better suggestions
 
@@ -7,13 +7,13 @@ Contextual word checker for better suggestions
 
 ## Types of spelling mistakes
 
-It is important to understand that, identifying the candidate is a big task. You can see the below quote from a research paper:
+It is essential to understand that identifying whether a candidate is a spelling error is a big task. You can see the below quote from a research paper:
 
 > Spelling errors are broadly classified as non- word errors (NWE) and real word errors (RWE). If the misspelt string is a valid word in the language, then it is called an RWE, else it is an NWE.
 >
 > -- [Monojit Choudhury et. al. (2007)][1]
 
-This package currently focuses on Out of Vocabulary (OOV) word or non word error (NWE) correction using BERT model. The idea of using BERT was to use the context when correcting OOV. In the future if the package gets traction, I would like to focus on RWE.
+This package currently focuses on Out of Vocabulary (OOV) word or non-word error (NWE) correction using BERT model. The idea of using BERT was to use the context when correcting OOV. In the coming days, I would like to focus on RWE and optimising the package by implementing it in cython.
 
 ## Install
 
@@ -96,7 +96,7 @@ True
 
 ## Extensions
 
-To make the usage simpler spacy provides custom extesnions which a library can use. This make it easier for the user to get the resired data. contextualSpellCheck, provides extensions on `doc`, `span` and `token` level. Below tables summaries the extensions. 
+To make the usage simpler spacy provides custom extensions which a library can use. This makes it easier for the user to get the desired data. contextualSpellCheck provides extensions on the `doc`, `span` and `token` level. Below tables summaries the extensions.
 
 ### `spaCy.Doc` level extensions
 
@@ -171,7 +171,7 @@ At present, there is a get API in a flask app. You can run the app and expect th
 
 ## Reference
 
-Below are some of the projects/work I refered to while developing this package
+Below are some of the projects/work I referred to while developing this package
 
 1. Spacy Documentation and [custom attributes](https://course.spacy.io/en/chapter3)
 2. [HuggingFace's Transformers](https://github.com/huggingface/transformers)
