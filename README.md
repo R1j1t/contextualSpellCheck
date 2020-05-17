@@ -3,7 +3,7 @@
 
 Contextual word checker for better suggestions
 
-[![GitHub](https://img.shields.io/github/license/r1j1t/contextualSpellCheck)](https://github.com/R1j1t/contextualSpellCheck/blob/master/LICENSE) [![PyPI](https://img.shields.io/pypi/v/contextualSpellCheck?color=green)](https://pypi.org/project/contextualSpellCheck/) [![PyPI - Downloads](https://img.shields.io/pypi/dm/contextualSpellCheck)](https://pypi.org/project/contextualSpellCheck/) [![GitHub contributors](https://img.shields.io/github/contributors/r1j1t/contextualSpellCheck)](https://github.com/R1j1t/contextualSpellCheck/graphs/contributors) [![Python](https://img.shields.io/badge/Python-3.6+-green)](https://github.com/R1j1t/contextualSpellCheck#install)
+[![GitHub](https://img.shields.io/github/license/r1j1t/contextualSpellCheck)](https://github.com/R1j1t/contextualSpellCheck/blob/master/LICENSE) [![PyPI](https://img.shields.io/pypi/v/contextualSpellCheck?color=green)](https://pypi.org/project/contextualSpellCheck/) [![PyPI - Downloads](https://img.shields.io/pypi/dm/contextualSpellCheck)](https://pypi.org/project/contextualSpellCheck/) [![GitHub contributors](https://img.shields.io/github/contributors/r1j1t/contextualSpellCheck)](https://github.com/R1j1t/contextualSpellCheck/graphs/contributors) [![Python](https://img.shields.io/badge/Python-3.6+-green)](https://github.com/R1j1t/contextualSpellCheck#install) [![Help Wanted](https://img.shields.io/badge/Help%20Wanted-Task%20List-green)](https://github.com/R1j1t/contextualSpellCheck#task-list)
 
 ## Types of spelling mistakes
 
@@ -168,6 +168,10 @@ At present, there is a get API in a flask app. You can run the app and expect th
 - [ ] better candidate generation (maybe by fine tuning the model?)
 - [ ] add metric by testing on datasets
 - [ ] Improve documentation
+
+## Support and contribution
+
+If you like the project, please ⭑ the project and show your support! Also, if you feel, the current behaviour is not as expected, please feel free to raise an [issue](https://github.com/R1j1t/contextualSpellCheck/issues). If you can help with any of the above tasks, please open a [PR](https://github.com/R1j1t/contextualSpellCheck/pulls) with necessary changes to documentation and tests.
 
 ## Reference
 
