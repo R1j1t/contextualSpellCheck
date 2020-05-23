@@ -250,9 +250,21 @@ def test_extension2_candidateGenerator(inputSentence, misspell):
     doc = nlp(inputSentence)
     (misspellings, doc) = checker.misspellIdentify(doc)
     suggestions = checker.candidateGenerator(doc, misspellings)
-    assert doc._.score_spellCheck == {
-        doc[key]: value for key, value in misspell.items()
-    }
+    assert doc._.score_spellCheck.keys() == {doc[key]: value for key, value in misspell.items()}.keys()
+    assert [
+        word_score[0]
+        for value in doc._.score_spellCheck.values()
+        for word_score in value
+    ] == [word_score[0] for value in misspell.values() for word_score in value]
+    assert [
+        word_score[1]
+        for value in doc._.score_spellCheck.values()
+        for word_score in value
+    ] == approx(
+        [word_score[1] for value in misspell.values() for word_score in value],
+        rel=1e-4,
+        abs=1e-4,
+    )
 
 
 @pytest.mark.parametrize(
