@@ -250,7 +250,10 @@ def test_extension2_candidateGenerator(inputSentence, misspell):
     doc = nlp(inputSentence)
     (misspellings, doc) = checker.misspellIdentify(doc)
     suggestions = checker.candidateGenerator(doc, misspellings)
-    assert doc._.score_spellCheck.keys() == {doc[key]: value for key, value in misspell.items()}.keys()
+    assert (
+        doc._.score_spellCheck.keys()
+        == {doc[key]: value for key, value in misspell.items()}.keys()
+    )
     assert [
         word_score[0]
         for value in doc._.score_spellCheck.values()
