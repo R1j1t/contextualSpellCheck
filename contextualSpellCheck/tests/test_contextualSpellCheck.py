@@ -7,7 +7,7 @@ from contextualSpellCheck.contextualSpellCheck import ContextualSpellCheck
 # This is the class we want to test. So, we need to import it
 
 
-nlp = spacy.load("en_core_web_sm", disable=["tagger", "parser"])
+nlp = spacy.load("en_core_web_sm")
 
 checker = ContextualSpellCheck()  # instantiate the Person Class
 
@@ -285,30 +285,8 @@ def test_doc_extensions():
     doc = nlp(u"Income was $9.4 milion compared to the prior year of $2.7 milion.")
 
     gold_suggestion = {
-        doc[4]: [
-            "million",
-            "billion",
-            ",",
-            "trillion",
-            "Million",
-            "%",
-            "##M",
-            "annually",
-            "##B",
-            "USD",
-        ],
-        doc[13]: [
-            "billion",
-            "million",
-            "trillion",
-            "##M",
-            "Million",
-            "##B",
-            "USD",
-            "##b",
-            "millions",
-            "%",
-        ],
+        doc[4]: "million",
+        doc[13]: "million",
     }
     gold_outcome = "Income was $9.4 million compared to the prior year of $2.7 million."
     gold_score = {
@@ -346,7 +324,10 @@ def test_doc_extensions():
 
 
 def test_span_extensions():
-    nlp.add_pipe(checker)
+    try:
+        nlp.add_pipe(checker)
+    except:
+        print("contextual SpellCheck already in pipeline")
     doc = nlp("Income was $9.4 milion compared to the prior year of $2.7 milion.")
 
     gold_score = [
@@ -379,18 +360,7 @@ def test_token_extension():
         nlp.add_pipe(checker)
     doc = nlp("Income was $9.4 milion compared to the prior year of $2.7 milion.")
 
-    gold_suggestions = [
-        "million",
-        "billion",
-        ",",
-        "trillion",
-        "Million",
-        "%",
-        "##M",
-        "annually",
-        "##B",
-        "USD",
-    ]
+    gold_suggestions = "million"
     gold_score = [
         ("million", 0.59422),
         ("billion", 0.24349),
