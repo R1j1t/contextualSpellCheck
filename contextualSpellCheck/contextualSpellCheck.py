@@ -19,7 +19,7 @@ class ContextualSpellCheck(object):
     def __init__(self, vocab_path="", debug=False):
         if vocab_path == "":
             currentPath = os.path.dirname(__file__)
-            vocab_path = os.path.join(currentPath, 'data/vocab.txt')
+            vocab_path = os.path.join(currentPath, "data/vocab.txt")
         # self.nlp = spacy.load(
         #     "en_core_web_sm", disable=["tagger", "parser"]
         # )  # using default tokeniser with NER
@@ -106,7 +106,7 @@ class ContextualSpellCheck(object):
         doc = nlp(query)
         modelLodaded = datetime.datetime.now()
         misspellTokens, doc = self.misspellIdentify(doc)
-        modelLoadTime = timeLog("Misspell identification: ", modelLodaded)
+        modelLoadTime = self.timeLog("Misspell identification: ", modelLodaded)
         updatedQuery = ""
         if len(misspellTokens) > 0:
             candidate = self.candidateGenerator(doc, misspellTokens)
