@@ -16,10 +16,10 @@ class ContextualSpellCheck(object):
 
     name = "contextual spellchecker"
 
-    def __init__(self, vocab_path="", debug=False):
+    def __init__(self, vocab_path="", debug=False, performance=False):
         if vocab_path == "":
             currentPath = os.path.dirname(__file__)
-            vocab_path = os.path.join(currentPath, 'data/vocab.txt')
+            vocab_path = os.path.join(currentPath, "data/vocab.txt")
         # self.nlp = spacy.load(
         #     "en_core_web_sm", disable=["tagger", "parser"]
         # )  # using default tokeniser with NER
@@ -32,16 +32,15 @@ class ContextualSpellCheck(object):
         self.BertModel = AutoModelWithLMHead.from_pretrained("bert-base-cased")
         self.mask = self.BertTokenizer.mask_token
         self.debug = debug
+        self.performance = performance
         if not Doc.has_extension("contextual_spellCheck"):
             Doc.set_extension("contextual_spellCheck", default=True)
             Doc.set_extension("performed_spellCheck", default=False)
 
             # {originalToken-1:[suggestedToken-1,suggestedToken-2,..],
             #  originalToken-2:[...]}
-            Doc.set_extension(
-                "suggestions_spellCheck", getter=self.doc_suggestions_spellCheck
-            )
-            Doc.set_extension("outcome_spellCheck", default="")
+            Doc.set_extension("suggestions_spellCheck", default={})
+            Doc.set_extension("outcome_spellCheck", getter=self.doc_outcome_spellCheck)
             Doc.set_extension("score_spellCheck", default=None)
 
             Span.set_extension(
@@ -66,28 +65,18 @@ class ContextualSpellCheck(object):
         Returns:
             `Spacy.Doc` -- Updated doc object with custom extensions values
         """
-        if self.debug:
+        if self.performance:
             modelLodaded = datetime.datetime.now()
         misspellTokens, doc = self.misspellIdentify(doc)
-        if self.debug:
+        if self.performance:
             modelLoadTime = self.timeLog("Misspell identification: ", modelLodaded)
         if len(misspellTokens) > 0:
             candidate = self.candidateGenerator(doc, misspellTokens)
-            if self.debug:
+            if self.performance:
                 modelLoadTime = self.timeLog("candidate Generator: ", modelLodaded)
             answer = self.candidateRanking(candidate)
-            if self.debug:
+            if self.performance:
                 modelLoadTime = self.timeLog("candidate ranking: ", modelLodaded)
-            updatedQuery = ""
-            for i in doc:
-                if i.i in [misspell.i for misspell in misspellTokens]:
-                    updatedQuery += answer[i] + i.whitespace_
-                else:
-                    updatedQuery += i.text_with_ws
-
-            if self.debug:
-                print("Did you mean: ", updatedQuery)
-            doc._.set("outcome_spellCheck", updatedQuery)
         return doc
 
     def check(self, query=""):
@@ -152,6 +141,10 @@ class ContextualSpellCheck(object):
                 and (not token.like_num)
                 and (not token.like_email)
                 and (not token.like_url)
+                # added after 0.0.4
+                and (not token.is_space)
+                and (not token.is_punct)
+                and (token.ent_type_ != "GPE")
             ):
 
                 misspell.append(token)
@@ -184,14 +177,17 @@ class ContextualSpellCheck(object):
 
         for token in misspellings:
             updatedQuery = ""
-            for i in doc:
+            # Instead of using complete doc, we use sentence to provide context and improve performance
+            if self.debug:
+                print(token.text, token.sent)
+            for i in token.sent:
                 if i.i == token.i:
                     updatedQuery += self.mask + i.whitespace_
                 else:
                     updatedQuery += i.text_with_ws
             if self.debug:
                 print(
-                    "For", "`" + token.text + "`", "updated query is:\n", updatedQuery
+                    "\nFor", "`" + token.text + "`", "updated query is:\n", updatedQuery
                 )
 
             model_input = self.BertTokenizer.encode(updatedQuery, return_tensors="pt")
@@ -205,7 +201,7 @@ class ContextualSpellCheck(object):
             top_n_tokens = top_n_tokens[0].tolist()
             top_n_score = top_n_score[0].tolist()
             if self.debug:
-                print("top_n_tokens:", top_n_tokens)
+                # print("top_n_tokens:", top_n_tokens)
                 print("token_score: ", top_n_score)
 
             if token not in response:
@@ -226,7 +222,9 @@ class ContextualSpellCheck(object):
             # print(updatedQuery.replace(self.mask, self.BertTokenizer.decode([candidate])))
 
             if self.debug:
-                print("\nresponse: ", response, "\nscore: ", score)
+                print(
+                    "response[token]: ", response[token], "score[token]: ", score[token]
+                )
 
         if len(misspellings) != 0:
             doc._.set("performed_spellCheck", True)
@@ -264,9 +262,13 @@ class ContextualSpellCheck(object):
                 if edit_dist < least_edit_dist:
                     least_edit_dist = edit_dist
                     response[misspell] = candidate
+                    tempToken = misspell
 
             if self.debug:
-                print(response)
+                print("response[misspell]", response[misspell])
+
+        if len(response) > 0:
+            tempToken.doc._.set("suggestions_spellCheck", response)
         return response
 
     def timeLog(self, fnName, relativeTime):
@@ -312,7 +314,7 @@ class ContextualSpellCheck(object):
         for suggestion in token.doc._.suggestions_spellCheck.keys():
             if token.i == suggestion.i:
                 return token.doc._.suggestions_spellCheck[token]
-        return []
+        return ""
 
     def token_score_spellCheck(self, token):
         """Getter for Token attributes. 
@@ -337,9 +339,9 @@ class ContextualSpellCheck(object):
             span {`Spacy.Span`} -- Span object for which value should be returned
 
         Returns:
-            List(Dict(`Token`:List(str,int))) -- for every token it will return (suggestion,score) eg: [{token-1: []}, {token-2: []}, {token-3: [('suggestion-1', score-1),]}] 
+            Dict(`Token`:List(str,int)) -- for every token it will return (suggestion,score) eg: {token-1: [], token-2: [], token-3: [('suggestion-1', score-1), ...], ...} 
         """
-        return [{token: self.token_score_spellCheck(token)} for token in span]
+        return {token: self.token_score_spellCheck(token) for token in span}
 
     def span_require_spellCheck(self, span):
         """Getter for Span Object
@@ -371,10 +373,38 @@ class ContextualSpellCheck(object):
                 response[token].append(suggestion_score[0])
         return response
 
+    def doc_outcome_spellCheck(self, doc):
+        """Getter for Doc attribute
+
+        Arguments:
+            doc {`Spacy.Doc`} -- Doc object for which value should be returned
+
+        Returns:
+            str -- updated sentence
+        """
+        if not doc._.performed_spellCheck:
+            return ""
+
+        updatedQuery = ""
+        suggestions = doc._.suggestions_spellCheck
+
+        for i in doc:
+            if i.i in [misspell.i for misspell in suggestions.keys()]:
+                updatedQuery += suggestions[i] + i.whitespace_
+            else:
+                updatedQuery += i.text_with_ws
+
+        if self.debug:
+            print("Did you mean: ", updatedQuery)
+
+        return updatedQuery
+
 
 if __name__ == "__main__":
     print("Code running...")
-    nlp = spacy.load("en_core_web_sm", disable=["tagger", "parser"])
+    nlp = spacy.load("en_core_web_sm")
+    if "parser" not in nlp.pipe_names:
+        raise AttributeError("parser is required please enable it in nlp pipeline")
     checker = ContextualSpellCheck(debug=False)
     nlp.add_pipe(checker)
 
