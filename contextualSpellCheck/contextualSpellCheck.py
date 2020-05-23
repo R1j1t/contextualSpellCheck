@@ -194,7 +194,6 @@ class ContextualSpellCheck(object):
             mask_token_index = torch.where(
                 model_input == self.BertTokenizer.mask_token_id
             )[1]
-            print(mask_token_index)
             token_logits = self.BertModel(model_input)[0]
             mask_token_logits = token_logits[0, mask_token_index, :]
             token_probability = torch.nn.functional.softmax(mask_token_logits, dim=1)
@@ -340,9 +339,9 @@ class ContextualSpellCheck(object):
             span {`Spacy.Span`} -- Span object for which value should be returned
 
         Returns:
-            List(Dict(`Token`:List(str,int))) -- for every token it will return (suggestion,score) eg: [{token-1: []}, {token-2: []}, {token-3: [('suggestion-1', score-1),]}] 
+            Dict(`Token`:List(str,int)) -- for every token it will return (suggestion,score) eg: {token-1: [], token-2: [], token-3: [('suggestion-1', score-1), ...], ...} 
         """
-        return [{token: self.token_score_spellCheck(token)} for token in span]
+        return {token: self.token_score_spellCheck(token) for token in span}
 
     def span_require_spellCheck(self, span):
         """Getter for Span Object
