@@ -1,19 +1,24 @@
 # spellCheck
-<a href="https://github.com/R1j1t/contextualSpellCheck"><img src="./assets/logo.png" width="276" height="120" align="right" /></a>
+<a href="https://github.com/R1j1t/contextualSpellCheck"><img src="https://user-images.githubusercontent.com/22280243/82138959-2852cd00-9842-11ea-918a-49b2a7873ef6.png" width="276" height="120" align="right" /></a>
 
 Contextual word checker for better suggestions
 
-[![GitHub](https://img.shields.io/github/license/r1j1t/contextualSpellCheck)](https://github.com/R1j1t/contextualSpellCheck/blob/master/LICENSE) [![PyPI](https://img.shields.io/pypi/v/contextualSpellCheck?color=green)](https://pypi.org/project/contextualSpellCheck/) [![PyPI - Downloads](https://img.shields.io/pypi/dm/contextualSpellCheck)](https://pypi.org/project/contextualSpellCheck/) [![GitHub contributors](https://img.shields.io/github/contributors/r1j1t/contextualSpellCheck)](https://github.com/R1j1t/contextualSpellCheck/graphs/contributors) [![Python](https://img.shields.io/badge/Python-3.6+-green)](https://github.com/R1j1t/contextualSpellCheck#install)
+[![license](https://img.shields.io/github/license/r1j1t/contextualSpellCheck)](https://github.com/R1j1t/contextualSpellCheck/blob/master/LICENSE) 
+[![PyPI](https://img.shields.io/pypi/v/contextualSpellCheck?color=green)](https://pypi.org/project/contextualSpellCheck/) 
+[![Python-Version](https://img.shields.io/badge/Python-3.6+-green)](https://github.com/R1j1t/contextualSpellCheck#install)
+[![Downloads](https://pepy.tech/badge/contextualspellcheck)](https://pepy.tech/project/contextualspellcheck)
+[![GitHub contributors](https://img.shields.io/github/contributors/r1j1t/contextualSpellCheck)](https://github.com/R1j1t/contextualSpellCheck/graphs/contributors)
+[![Help Wanted](https://img.shields.io/badge/Help%20Wanted-Task%20List-violet)](https://github.com/R1j1t/contextualSpellCheck#task-list)
 
 ## Types of spelling mistakes
 
-It is important to understand that, identifying the candidate is a big task. You can see the below quote from a research paper:
+It is essential to understand that identifying whether a candidate is a spelling error is a big task. You can see the below quote from a research paper:
 
 > Spelling errors are broadly classified as non- word errors (NWE) and real word errors (RWE). If the misspelt string is a valid word in the language, then it is called an RWE, else it is an NWE.
 >
 > -- [Monojit Choudhury et. al. (2007)][1]
 
-This package currently focuses on Out of Vocabulary (OOV) word or non word error (NWE) correction using BERT model. The idea of using BERT was to use the context when correcting OOV. In the future if the package gets traction, I would like to focus on RWE.
+This package currently focuses on Out of Vocabulary (OOV) word or non-word error (NWE) correction using BERT model. The idea of using BERT was to use the context when correcting OOV. In the coming days, I would like to focus on RWE and optimising the package by implementing it in cython.
 
 ## Install
 
@@ -96,7 +101,7 @@ True
 
 ## Extensions
 
-To make the usage simpler spacy provides custom extesnions which a library can use. This make it easier for the user to get the resired data. contextualSpellCheck, provides extensions on `doc`, `span` and `token` level. Below tables summaries the extensions. 
+To make the usage simpler spacy provides custom extensions which a library can use. This makes it easier for the user to get the desired data. contextualSpellCheck provides extensions on the `doc`, `span` and `token` level. Below tables summaries the extensions.
 
 ### `spaCy.Doc` level extensions
 
@@ -169,9 +174,13 @@ At present, there is a get API in a flask app. You can run the app and expect th
 - [ ] add metric by testing on datasets
 - [ ] Improve documentation
 
+## Support and contribution
+
+If you like the project, please ⭑ the project and show your support! Also, if you feel, the current behaviour is not as expected, please feel free to raise an [issue](https://github.com/R1j1t/contextualSpellCheck/issues). If you can help with any of the above tasks, please open a [PR](https://github.com/R1j1t/contextualSpellCheck/pulls) with necessary changes to documentation and tests.
+
 ## Reference
 
-Below are some of the projects/work I refered to while developing this package
+Below are some of the projects/work I referred to while developing this package
 
 1. Spacy Documentation and [custom attributes](https://course.spacy.io/en/chapter3)
 2. [HuggingFace's Transformers](https://github.com/huggingface/transformers)

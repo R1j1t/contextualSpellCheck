@@ -95,7 +95,7 @@ class ContextualSpellCheck(object):
         doc = nlp(query)
         modelLodaded = datetime.datetime.now()
         misspellTokens, doc = self.misspellIdentify(doc)
-        modelLoadTime = timeLog("Misspell identification: ", modelLodaded)
+        modelLoadTime = self.timeLog("Misspell identification: ", modelLodaded)
         updatedQuery = ""
         if len(misspellTokens) > 0:
             candidate = self.candidateGenerator(doc, misspellTokens)
