@@ -1,5 +1,6 @@
 import pytest
 import spacy
+from pytest import approx
 
 from contextualSpellCheck.contextualSpellCheck import ContextualSpellCheck
 
@@ -7,7 +8,7 @@ from contextualSpellCheck.contextualSpellCheck import ContextualSpellCheck
 # This is the class we want to test. So, we need to import it
 
 
-nlp = spacy.load("en_core_web_sm", disable=["tagger", "parser"])
+nlp = spacy.load("en_core_web_sm")
 
 checker = ContextualSpellCheck()  # instantiate the Person Class
 
@@ -249,9 +250,24 @@ def test_extension2_candidateGenerator(inputSentence, misspell):
     doc = nlp(inputSentence)
     (misspellings, doc) = checker.misspellIdentify(doc)
     suggestions = checker.candidateGenerator(doc, misspellings)
-    assert doc._.score_spellCheck == {
-        doc[key]: value for key, value in misspell.items()
-    }
+    assert (
+        doc._.score_spellCheck.keys()
+        == {doc[key]: value for key, value in misspell.items()}.keys()
+    )
+    assert [
+        word_score[0]
+        for value in doc._.score_spellCheck.values()
+        for word_score in value
+    ] == [word_score[0] for value in misspell.values() for word_score in value]
+    assert [
+        word_score[1]
+        for value in doc._.score_spellCheck.values()
+        for word_score in value
+    ] == approx(
+        [word_score[1] for value in misspell.values() for word_score in value],
+        rel=1e-4,
+        abs=1e-4,
+    )
 
 
 @pytest.mark.parametrize(
@@ -285,30 +301,8 @@ def test_doc_extensions():
     doc = nlp(u"Income was $9.4 milion compared to the prior year of $2.7 milion.")
 
     gold_suggestion = {
-        doc[4]: [
-            "million",
-            "billion",
-            ",",
-            "trillion",
-            "Million",
-            "%",
-            "##M",
-            "annually",
-            "##B",
-            "USD",
-        ],
-        doc[13]: [
-            "billion",
-            "million",
-            "trillion",
-            "##M",
-            "Million",
-            "##B",
-            "USD",
-            "##b",
-            "millions",
-            "%",
-        ],
+        doc[4]: "million",
+        doc[13]: "million",
     }
     gold_outcome = "Income was $9.4 million compared to the prior year of $2.7 million."
     gold_score = {
@@ -341,36 +335,71 @@ def test_doc_extensions():
     assert doc._.performed_spellCheck == True
     assert doc._.suggestions_spellCheck == gold_suggestion
     assert doc._.outcome_spellCheck == gold_outcome
-    assert doc._.score_spellCheck == gold_score
+    # splitting components to make use of approx function
+    assert doc._.score_spellCheck.keys() == gold_score.keys()
+    assert [
+        word_score[0]
+        for value in doc._.score_spellCheck.values()
+        for word_score in value
+    ] == [word_score[0] for value in gold_score.values() for word_score in value]
+    assert [
+        word_score[1]
+        for value in doc._.score_spellCheck.values()
+        for word_score in value
+    ] == approx(
+        [word_score[1] for value in gold_score.values() for word_score in value],
+        rel=1e-4,
+        abs=1e-4,
+    )
     nlp.remove_pipe("contextual spellchecker")
 
 
 def test_span_extensions():
-    nlp.add_pipe(checker)
+    try:
+        nlp.add_pipe(checker)
+    except:
+        print("contextual SpellCheck already in pipeline")
     doc = nlp("Income was $9.4 milion compared to the prior year of $2.7 milion.")
 
-    gold_score = [
-        {doc[2]: []},
-        {doc[3]: []},
-        {
-            doc[4]: [
-                ("million", 0.59422),
-                ("billion", 0.24349),
-                (",", 0.08809),
-                ("trillion", 0.01835),
-                ("Million", 0.00826),
-                ("%", 0.00672),
-                ("##M", 0.00591),
-                ("annually", 0.0038),
-                ("##B", 0.00205),
-                ("USD", 0.00113),
-            ]
-        },
-        {doc[5]: []},
-    ]
+    gold_score = {
+        doc[2]: [],
+        doc[3]: [],
+        doc[4]: [
+            ("million", 0.59422),
+            ("billion", 0.24349),
+            (",", 0.08809),
+            ("trillion", 0.01835),
+            ("Million", 0.00826),
+            ("%", 0.00672),
+            ("##M", 0.00591),
+            ("annually", 0.0038),
+            ("##B", 0.00205),
+            ("USD", 0.00113),
+        ],
+        doc[5]: [],
+    }
 
     assert doc[2:6]._.get_has_spellCheck == True
-    assert doc[2:6]._.score_spellCheck == gold_score
+    # splitting components to make use of approx function
+    print(doc[2:6]._.score_spellCheck)
+    print(gold_score)
+    assert doc[2:6]._.score_spellCheck.keys() == gold_score.keys()
+    assert [
+        word_score[0]
+        for value in doc[2:6]._.score_spellCheck.values()
+        for word_score in value
+    ] == [word_score[0] for value in gold_score.values() for word_score in value]
+    assert [
+        word_score[1]
+        for value in doc[2:6]._.score_spellCheck.values()
+        for word_score in value
+    ] == approx(
+        [word_score[1] for value in gold_score.values() for word_score in value],
+        rel=1e-4,
+        abs=1e-4,
+    )
+
+    # assert doc[2:6]._.score_spellCheck == approx(gold_score,rel=1e-4, abs=1e-4)
     nlp.remove_pipe("contextual spellchecker")
 
 
@@ -379,18 +408,7 @@ def test_token_extension():
         nlp.add_pipe(checker)
     doc = nlp("Income was $9.4 milion compared to the prior year of $2.7 milion.")
 
-    gold_suggestions = [
-        "million",
-        "billion",
-        ",",
-        "trillion",
-        "Million",
-        "%",
-        "##M",
-        "annually",
-        "##B",
-        "USD",
-    ]
+    gold_suggestions = "million"
     gold_score = [
         ("million", 0.59422),
         ("billion", 0.24349),
@@ -406,5 +424,11 @@ def test_token_extension():
 
     assert doc[4]._.get_require_spellCheck == True
     assert doc[4]._.get_suggestion_spellCheck == gold_suggestions
-    assert doc[4]._.score_spellCheck == gold_score
+    ## Match words and score seperatly to incoporate approx fn in pytest
+    assert [word_score[0] for word_score in doc[4]._.score_spellCheck] == [
+        word_score[0] for word_score in gold_score
+    ]
+    assert [word_score[1] for word_score in doc[4]._.score_spellCheck] == approx(
+        [word_score[1] for word_score in gold_score], rel=1e-4, abs=1e-4
+    )
     nlp.remove_pipe("contextual spellchecker")
