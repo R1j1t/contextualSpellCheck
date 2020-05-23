@@ -268,7 +268,7 @@ class ContextualSpellCheck(object):
             if self.debug:
                 print("response[misspell]", response[misspell])
 
-        if len(response)>0:
+        if len(response) > 0:
             tempToken.doc._.set("suggestions_spellCheck", response)
         return response
 
