@@ -1,5 +1,5 @@
 from flask import request
-from contextualSpellCheck.contextualSpellCheck import contextualSpellCheck
+from contextualSpellCheck.contextualSpellCheck import ContextualSpellCheck
 import spacy
 import json
 from flask import Flask, render_template, request, make_response, jsonify
@@ -10,8 +10,8 @@ from flask import Flask, render_template, request, make_response, jsonify
 
 app = Flask(__name__)
 
-nlp = spacy.load("en_core_web_sm", disable=["tagger", "parser"])
-checker = contextualSpellCheck(debug=False)
+nlp = spacy.load("en_core_web_sm")
+checker = ContextualSpellCheck(debug=False)
 nlp.add_pipe(checker)
 
 

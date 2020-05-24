@@ -39,12 +39,17 @@ Also, please install the dependencies from requirements.txt
 >>> import spacy
 >>> 
 >>> ## We require NER to identify if it is PERSON
->>> nlp = spacy.load("en_core_web_sm", disable=["tagger", "parser"])
+>>> ## also require parser because we use Token.sent for context
+>>> nlp = spacy.load("en_core_web_sm")
 >>> 
 >>> contextualSpellCheck.add_to_pipe(nlp)
 <spacy.lang.en.English object at 0x12839a2d0>
 >>> nlp.pipe_names
-['ner', 'contextual spellchecker']
+['tagger', 'parser', 'ner', 'contextual spellchecker']
+>>> 
+>>> doc = nlp('Income was $9.4 milion compared to the prior year of $2.7 milion.')
+>>> doc._.outcome_spellCheck
+'Income was $9.4 million compared to the prior year of $2.7 million.'
 ```
 
 Or you can add to spaCy pipeline manually!
@@ -78,7 +83,7 @@ True
 >>> print(doc._.performed_spellCheck)
 True
 >>> print(doc._.suggestions_spellCheck)
-{milion: ['million', 'billion', ',', 'trillion', 'Million', '%', '##M', 'annually', '##B', 'USD'], milion: ['billion', 'million', 'trillion', '##M', 'Million', '##B', 'USD', '##b', 'millions', '%']}
+{milion: 'million', milion: 'million'}
 >>> print(doc._.outcome_spellCheck)
 Income was $9.4 million compared to the prior year of $2.7 million.
 >>> print(doc._.score_spellCheck)
@@ -88,7 +93,7 @@ Income was $9.4 million compared to the prior year of $2.7 million.
 >>> print(doc[4]._.get_require_spellCheck)
 True
 >>> print(doc[4]._.get_suggestion_spellCheck)
-['million', 'billion', ',', 'trillion', 'Million', '%', '##M', 'annually', '##B', 'USD']
+'million'
 >>> print(doc[4]._.score_spellCheck)
 [('million', 0.59422), ('billion', 0.24349), (',', 0.08809), ('trillion', 0.01835), ('Million', 0.00826), ('%', 0.00672), ('##M', 0.00591), ('annually', 0.0038), ('##B', 0.00205), ('USD', 0.00113)]
 >>> 
@@ -96,7 +101,7 @@ True
 >>> print(doc[2:6]._.get_has_spellCheck)
 True
 >>> print(doc[2:6]._.score_spellCheck)
-[{$: []}, {9.4: []}, {milion: [('million', 0.59422), ('billion', 0.24349), (',', 0.08809), ('trillion', 0.01835), ('Million', 0.00826), ('%', 0.00672), ('##M', 0.00591), ('annually', 0.0038), ('##B', 0.00205), ('USD', 0.00113)]}, {compared: []}]
+{$: [], 9.4: [], milion: [('million', 0.59422), ('billion', 0.24349), (',', 0.08809), ('trillion', 0.01835), ('Million', 0.00826), ('%', 0.00672), ('##M', 0.00591), ('annually', 0.0038), ('##B', 0.00205), ('USD', 0.00113)], compared: []}
 ```
 
 ## Extensions
@@ -129,13 +134,22 @@ To make the usage simpler spacy provides custom extensions which a library can u
 
 ## API
 
-At present, there is a get API in a flask app. You can run the app and expect the following output from the API.
+At present, there is a simple GET API to get you started. You can run the app in your local and play with it.
+
+Query: You can use the endpoint http://127.0.0.1:5000/?query=YOUR-QUERY
+Note: Your browser can handle the text encoding
+
+```
+http://localhost:5000/?query=Income%20was%20$9.4%20milion%20compared%20to%20the%20prior%20year%20of%20$2.7%20milion.
+```
+
+Response:
 
 ```json
 {
     "success": true,
     "input": "Income was $9.4 milion compared to the prior year of $2.7 milion.",
-    "corrected": "Income was $9.4 million compared to the prior year of $2.7 million.",
+    "corrected": "Income was $9.4 milion compared to the prior year of $2.7 milion.",
     "suggestion_score": {
         "milion": [
             [
