@@ -1,6 +1,7 @@
 import pytest
 import spacy
 from pytest import approx
+import warnings
 
 from contextualSpellCheck.contextualSpellCheck import ContextualSpellCheck
 
@@ -49,7 +50,13 @@ def test_type_misspellIdentify(inputSentence, misspell):
 def test_identify_misspellIdentify(inputSentence, misspell):
     print("Start misspell word identifation test\n")
     doc = nlp(inputSentence)
-    assert checker.misspellIdentify(doc)[0] == [doc[i] for i in misspell]
+    checkerReturn = checker.misspellIdentify(doc)[0]
+    assert type(checkerReturn) == list
+    ## Changed the approach after v0.1.0
+    assert [tok.text_with_ws for tok in checkerReturn] == [
+        doc[i].text_with_ws for i in misspell
+    ]
+    assert [tok.i for tok in checkerReturn] == [doc[i].i for i in misspell]
 
 
 @pytest.mark.parametrize(
@@ -118,7 +125,9 @@ def test_skipURL_misspellIdentify(inputSentence, misspell):
 def test_type_candidateGenerator(inputSentence, misspell):
     doc = nlp(inputSentence)
     misspell, doc = checker.misspellIdentify(doc)
-    assert type(checker.candidateGenerator(doc, misspell)) == dict
+    assert type(checker.candidateGenerator(doc, misspell)) == tuple
+    assert type(checker.candidateGenerator(doc, misspell)[0]) == type(doc)
+    assert type(checker.candidateGenerator(doc, misspell)[1]) == dict
 
 
 @pytest.mark.parametrize(
@@ -176,9 +185,15 @@ def test_identify_candidateGenerator(inputSentence, misspell):
     print("Start misspell word identifation test\n")
     doc = nlp(inputSentence)
     (misspellings, doc) = checker.misspellIdentify(doc)
-    suggestions = checker.candidateGenerator(doc, misspellings)
-    gold_suggestions = {doc[key]: value for key, value in misspell.items()}
-    assert suggestions == gold_suggestions
+    doc, suggestions = checker.candidateGenerator(doc, misspellings)
+    ## changed after v1.0 because of deepCopy creatng issue with ==
+    # gold_suggestions = {doc[key]: value for key, value in misspell.items()}
+    assert [tok.i for tok in suggestions] == [key for key in misspell.keys()]
+    assert [suggString for suggString in suggestions.values()] == [
+        suggString for suggString in misspell.values()
+    ]
+
+    # assert suggestions == gold_suggestions
 
 
 @pytest.mark.parametrize(
@@ -249,11 +264,12 @@ def test_extension_candidateGenerator(inputSentence, misspell):
 def test_extension2_candidateGenerator(inputSentence, misspell):
     doc = nlp(inputSentence)
     (misspellings, doc) = checker.misspellIdentify(doc)
-    suggestions = checker.candidateGenerator(doc, misspellings)
-    assert (
-        doc._.score_spellCheck.keys()
-        == {doc[key]: value for key, value in misspell.items()}.keys()
-    )
+    doc, suggestions = checker.candidateGenerator(doc, misspellings)
+
+    ## changes after v0.1.0
+    assert [tokIndex.i for tokIndex in doc._.score_spellCheck.keys()] == [
+        tokIndex for tokIndex in misspell.keys()
+    ]
     assert [
         word_score[0]
         for value in doc._.score_spellCheck.values()
@@ -283,9 +299,14 @@ def test_extension2_candidateGenerator(inputSentence, misspell):
 def test_ranking_candidateRanking(inputSentence, misspell):
     doc = nlp(inputSentence)
     (misspellings, doc) = checker.misspellIdentify(doc)
-    suggestions = checker.candidateGenerator(doc, misspellings)
-    selectedWord = checker.candidateRanking(suggestions)
-    assert selectedWord == {doc[key]: value for key, value in misspell.items()}
+    doc, suggestions = checker.candidateGenerator(doc, misspellings)
+    selectedWord = checker.candidateRanking(doc, suggestions)
+    ## changes made after v0.1
+    # assert selectedWord == {doc[key]: value for key, value in misspell.items()}
+    assert [tok.i for tok in selectedWord.keys()] == [tok for tok in misspell.keys()]
+    assert [tokString for tokString in selectedWord.values()] == [
+        tok for tok in misspell.values()
+    ]
 
 
 def test_compatible_spacyPipeline():
@@ -333,10 +354,22 @@ def test_doc_extensions():
     }
     assert doc._.contextual_spellCheck == True
     assert doc._.performed_spellCheck == True
-    assert doc._.suggestions_spellCheck == gold_suggestion
+    ## updated after v0.1
+    assert [tok.i for tok in doc._.suggestions_spellCheck.keys()] == [
+        tok.i for tok in gold_suggestion.keys()
+    ]
+    assert [tokString for tokString in doc._.suggestions_spellCheck.values()] == [
+        tokString for tokString in gold_suggestion.values()
+    ]
     assert doc._.outcome_spellCheck == gold_outcome
     # splitting components to make use of approx function
-    assert doc._.score_spellCheck.keys() == gold_score.keys()
+    assert [tok.i for tok in doc._.score_spellCheck.keys()] == [
+        tok.i for tok in gold_score.keys()
+    ]
+    assert [tok.text_with_ws for tok in doc._.score_spellCheck.keys()] == [
+        tok.text_with_ws for tok in gold_score.keys()
+    ]
+
     assert [
         word_score[0]
         for value in doc._.score_spellCheck.values()
@@ -432,3 +465,33 @@ def test_token_extension():
         [word_score[1] for word_score in gold_score], rel=1e-4, abs=1e-4
     )
     nlp.remove_pipe("contextual spellchecker")
+
+
+def test_worning():
+    if "contextual spellchecker" not in nlp.pipe_names:
+        nlp.add_pipe(checker)
+    merge_ents = nlp.create_pipe("merge_entities")
+    nlp.add_pipe(merge_ents)
+    doc = nlp("Income was $9.4 milion compared to the prior year of $2.7 milion.")
+
+    with warnings.catch_warnings(record=True) as w:
+        # Cause all warnings to always be triggered.
+        warnings.simplefilter("always")
+        # Trigger a warning.
+
+        assert doc[4]._.get_require_spellCheck == False
+        assert doc[4]._.get_suggestion_spellCheck == ""
+        assert doc[4]._.score_spellCheck == []
+        # Verify Warning
+        assert issubclass(w[-1].category, UserWarning)
+        assert (
+            "Position of tokens modified by downstream element in pipeline eg. merge_entities"
+            in str(w[-1].message)
+        )
+
+        nlp.remove_pipe("contextual spellchecker")
+        print(nlp.pipe_names)
+
+        nlp.remove_pipe("merge_entities")
+        print(nlp.pipe_names)
+        warnings.simplefilter("default")

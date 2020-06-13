@@ -3,6 +3,8 @@ import torch
 import editdistance
 import datetime
 import os
+import copy
+import warnings
 
 from spacy.tokens import Doc, Token, Span
 from spacy.vocab import Vocab
@@ -40,7 +42,7 @@ class ContextualSpellCheck(object):
             # {originalToken-1:[suggestedToken-1,suggestedToken-2,..],
             #  originalToken-2:[...]}
             Doc.set_extension("suggestions_spellCheck", default={})
-            Doc.set_extension("outcome_spellCheck", getter=self.doc_outcome_spellCheck)
+            Doc.set_extension("outcome_spellCheck", default="")
             Doc.set_extension("score_spellCheck", default=None)
 
             Span.set_extension(
@@ -71,10 +73,10 @@ class ContextualSpellCheck(object):
         if self.performance:
             modelLoadTime = self.timeLog("Misspell identification: ", modelLodaded)
         if len(misspellTokens) > 0:
-            candidate = self.candidateGenerator(doc, misspellTokens)
+            doc, candidate = self.candidateGenerator(doc, misspellTokens)
             if self.performance:
                 modelLoadTime = self.timeLog("candidate Generator: ", modelLodaded)
-            answer = self.candidateRanking(candidate)
+            answer = self.candidateRanking(doc, candidate)
             if self.performance:
                 modelLoadTime = self.timeLog("candidate ranking: ", modelLodaded)
         return doc
@@ -132,9 +134,11 @@ class ContextualSpellCheck(object):
             `tuple` -- returns `List[`Spacy.Token`]` and `Spacy.Doc`
         """
 
+        docCopy = copy.deepcopy(doc)
+
         # doc = self.nlp(query)
         misspell = []
-        for token in doc:
+        for token in docCopy:
             if (
                 (token.text.lower() not in self.vocab)
                 and (token.ent_type_ != "PERSON")
@@ -150,7 +154,7 @@ class ContextualSpellCheck(object):
                 misspell.append(token)
 
         if self.debug:
-            print(misspell)
+            print("misspell identified: ", misspell)
         return (misspell, doc)
 
     def candidateGenerator(self, doc, misspellings, top_n=10):
@@ -223,16 +227,19 @@ class ContextualSpellCheck(object):
 
             if self.debug:
                 print(
-                    "response[token]: ", response[token], "score[token]: ", score[token]
+                    "response[" + "`" + str(token) + "`" + "]: ",
+                    response[token],
+                    "score[" + "`" + str(token) + "`" + "]: ",
+                    score[token],
                 )
 
         if len(misspellings) != 0:
             doc._.set("performed_spellCheck", True)
             doc._.set("score_spellCheck", score)
 
-        return response
+        return (doc, response)
 
-    def candidateRanking(self, misspellingsDict):
+    def candidateRanking(self, doc, misspellingsDict):
         """Ranking the candidates based on edit Distance
 
         At present using a library to calculate edit distance 
@@ -265,10 +272,23 @@ class ContextualSpellCheck(object):
                     tempToken = misspell
 
             if self.debug:
-                print("response[misspell]", response[misspell])
+                print("response[" + "`" + str(misspell) + "`" + "]", response[misspell])
 
         if len(response) > 0:
-            tempToken.doc._.set("suggestions_spellCheck", response)
+            doc._.set("suggestions_spellCheck", response)
+            updatedQuery = ""
+            for i in doc:
+                updatedToken = i.text_with_ws
+                for misspell in response.keys():
+                    if i.i == misspell.i:
+                        updatedToken = response[misspell] + misspell.whitespace_
+                        break
+                updatedQuery += updatedToken
+            doc._.set("outcome_spellCheck", updatedQuery)
+
+        if self.debug:
+            print("Final suggestions", doc._.suggestions_spellCheck)
+
         return response
 
     def timeLog(self, fnName, relativeTime):
@@ -297,7 +317,7 @@ class ContextualSpellCheck(object):
         """
         return any(
             [
-                token.i == suggestion.i
+                token.i == suggestion.i and token.text == suggestion.text
                 for suggestion in token.doc._.suggestions_spellCheck.keys()
             ]
         )
@@ -313,7 +333,12 @@ class ContextualSpellCheck(object):
         """
         for suggestion in token.doc._.suggestions_spellCheck.keys():
             if token.i == suggestion.i:
-                return token.doc._.suggestions_spellCheck[token]
+                if token.text_with_ws == suggestion.text_with_ws:
+                    return token.doc._.suggestions_spellCheck[suggestion]
+                else:
+                    warnings.warn(
+                        "Position of tokens modified by downstream element in pipeline eg. merge_entities"
+                    )
         return ""
 
     def token_score_spellCheck(self, token):
@@ -329,7 +354,12 @@ class ContextualSpellCheck(object):
             return []
         for suggestion in token.doc._.score_spellCheck.keys():
             if token.i == suggestion.i:
-                return token.doc._.score_spellCheck[token]
+                if token.text == suggestion.text:
+                    return token.doc._.score_spellCheck[suggestion]
+                else:
+                    warnings.warn(
+                        "Position of tokens modified by downstream element in pipeline eg. merge_entities"
+                    )
         return []
 
     def span_score_spellCheck(self, span):
@@ -389,10 +419,14 @@ class ContextualSpellCheck(object):
         suggestions = doc._.suggestions_spellCheck
 
         for i in doc:
-            if i.i in [misspell.i for misspell in suggestions.keys()]:
-                updatedQuery += suggestions[i] + i.whitespace_
-            else:
-                updatedQuery += i.text_with_ws
+            updatedToken = i.text_with_ws
+            for misspell in suggestions.keys():
+                if misspell.text_with_ws in i.text_with_ws:
+                    updatedToken = suggestions[misspell] + misspell.whitespace_
+                    suggestions.remove(misspell)
+                    break
+
+            updatedQuery += updatedToken
 
         if self.debug:
             print("Did you mean: ", updatedQuery)
@@ -403,10 +437,13 @@ class ContextualSpellCheck(object):
 if __name__ == "__main__":
     print("Code running...")
     nlp = spacy.load("en_core_web_sm")
+    # for issue #1
+    # merge_ents = nlp.create_pipe("merge_entities")
     if "parser" not in nlp.pipe_names:
         raise AttributeError("parser is required please enable it in nlp pipeline")
-    checker = ContextualSpellCheck(debug=False)
+    checker = ContextualSpellCheck(debug=True)
     nlp.add_pipe(checker)
+    # nlp.add_pipe(merge_ents)
 
     doc = nlp(u"Income was $9.4 milion compared to the prior year of $2.7 milion.")
 
@@ -417,3 +454,17 @@ if __name__ == "__main__":
     print(doc._.performed_spellCheck)
     print(doc._.suggestions_spellCheck)
     print(doc._.score_spellCheck)
+
+    token_pos = 4
+    print("=" * 20, "Token Extention Test", "=" * 20)
+    print(doc[token_pos].text, doc[token_pos].i)
+    print(doc[token_pos]._.get_require_spellCheck)
+    print(doc[token_pos]._.get_suggestion_spellCheck)
+    print(doc[token_pos]._.score_spellCheck)
+
+    span_start = token_pos - 2
+    span_end = token_pos + 2
+    print("=" * 20, "Span Extention Test", "=" * 20)
+    print(doc[span_start:span_end].text)
+    print(doc[span_start:span_end]._.get_has_spellCheck)
+    print(doc[span_start:span_end]._.score_spellCheck)
