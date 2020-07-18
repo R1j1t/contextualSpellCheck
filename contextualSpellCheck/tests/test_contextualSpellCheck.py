@@ -514,7 +514,7 @@ def test_vocabFile():
     orgDebugFilePath = os.path.join(currentPath, "originaldebugFile.txt")
     testVocab = os.path.join(currentPath, "testVocab.txt")
     print(testVocab, currentPath, debugPathFile)
-    checkertest = ContextualSpellCheck(vocab_path=testVocab,debug=True)
+    checkertest = ContextualSpellCheck(vocab_path=testVocab, debug=True)
     with open(orgDebugFilePath) as f1:
         with open(debugPathFile) as f2:
             assert f1.read() == f2.read()
