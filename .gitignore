@@ -141,3 +141,4 @@ dmypy.json
 peter's code/
 *.pptx
 *.ipynb
+contextualSpellCheck/tests/debugFile.txt

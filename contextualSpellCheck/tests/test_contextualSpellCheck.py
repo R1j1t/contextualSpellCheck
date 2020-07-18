@@ -1,9 +1,9 @@
 import pytest
 import spacy
 from pytest import approx
-import warnings
+import warnings, os
 
-from contextualSpellCheck.contextualSpellCheck import ContextualSpellCheck
+from ..contextualSpellCheck import ContextualSpellCheck
 
 # print(contextualSpellCheck.__name__,contextualSpellCheck.__package__,contextualSpellCheck.__file__,sep="\n")
 # This is the class we want to test. So, we need to import it
@@ -467,7 +467,7 @@ def test_token_extension():
     nlp.remove_pipe("contextual spellchecker")
 
 
-def test_worning():
+def test_warning():
     if "contextual spellchecker" not in nlp.pipe_names:
         nlp.add_pipe(checker)
     merge_ents = nlp.create_pipe("merge_entities")
@@ -495,3 +495,26 @@ def test_worning():
         nlp.remove_pipe("merge_entities")
         print(nlp.pipe_names)
         warnings.simplefilter("default")
+
+        with pytest.raises(TypeError) as e:
+            checkertest = ContextualSpellCheck(vocab_path=True)
+            assert (
+                e
+                == "Please check datatype provided. vocab_path should be str, debug and performance should be bool"
+            )
+
+
+def test_vocabFile():
+    with warnings.catch_warnings(record=True) as w:
+        checkertest = ContextualSpellCheck(vocab_path="testing.txt")
+        assert issubclass(w[-1].category, UserWarning)
+        assert "Using default vocab" in str(w[-1].message)
+    currentPath = os.path.dirname(__file__)
+    debugPathFile = os.path.join(currentPath, "debugFile.txt")
+    orgDebugFilePath = os.path.join(currentPath, "originaldebugFile.txt")
+    testVocab = os.path.join(currentPath, "testVocab.txt")
+    print(testVocab, currentPath, debugPathFile)
+    checkertest = ContextualSpellCheck(vocab_path=testVocab)
+    with open(orgDebugFilePath) as f1:
+        with open(debugPathFile) as f2:
+            assert f1.read() == f2.read()
