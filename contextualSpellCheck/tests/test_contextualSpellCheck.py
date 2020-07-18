@@ -507,8 +507,8 @@ def test_warning():
 def test_vocabFile():
     with warnings.catch_warnings(record=True) as w:
         checkertest = ContextualSpellCheck(vocab_path="testing.txt")
-        assert issubclass(w[-1].category, UserWarning)
-        assert "Using default vocab" in str(w[-1].message)
+        assert any([issubclass(i.category, UserWarning) for i in w])
+        assert any(["Using default vocab" in str(i.message) for i in w])
     currentPath = os.path.dirname(__file__)
     debugPathFile = os.path.join(currentPath, "debugFile.txt")
     orgDebugFilePath = os.path.join(currentPath, "originaldebugFile.txt")
