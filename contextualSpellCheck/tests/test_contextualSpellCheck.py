@@ -476,7 +476,7 @@ def test_warning():
 
     with warnings.catch_warnings(record=True) as w:
         # Cause all warnings to always be triggered.
-        warnings.simplefilter("always")
+        # warnings.simplefilter("always")
         # Trigger a warning.
 
         assert doc[4]._.get_require_spellCheck == False
@@ -494,7 +494,7 @@ def test_warning():
 
         nlp.remove_pipe("merge_entities")
         print(nlp.pipe_names)
-        warnings.simplefilter("default")
+        # warnings.simplefilter("default")
 
         with pytest.raises(TypeError) as e:
             checkertest = ContextualSpellCheck(vocab_path=True)
