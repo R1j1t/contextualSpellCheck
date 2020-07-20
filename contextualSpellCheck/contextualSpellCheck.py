@@ -19,16 +19,67 @@ class ContextualSpellCheck(object):
     name = "contextual spellchecker"
 
     def __init__(self, vocab_path="", debug=False, performance=False):
+        """To create an object for this class. It does not require any special 
+
+        Args:
+            vocab_path (str, optional): Vocabulary file path to be used by the model . Defaults to "".
+            debug (bool, optional): This help prints logs as the data flows throught the class. Defaults to False.
+            performance (bool, optional): This is used to print the time taken by individual steps in spell check. Defaults to False.
+        """
+        if (
+            (type(vocab_path) != type(""))
+            or (type(debug) != type(True))
+            or (type(performance) != type(True))
+        ):
+            raise TypeError(
+                "Please check datatype provided. vocab_path should be str, debug and performance should be bool"
+            )
+
+        if vocab_path != "":
+            try:
+                # First open() for user specified word addition to vocab
+                with open(vocab_path, encoding="utf8") as f:
+                    # if want to remove '[unusedXX]' from vocab
+                    # words = [line.rstrip() for line in f if not line.startswith('[unused')]
+                    words = [line.strip() for line in f]
+
+                # The below code adds the neccesary words like numbers/puncutations/tokenizer specific words like [PAD]/[unused0]/##M
+                currentPath = os.path.dirname(__file__)
+                vocab_path = os.path.join(currentPath, "data", "vocab.txt")
+                extraToken = ["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]"]
+                words.extend(extraToken)
+
+                with open(vocab_path, encoding="utf8") as f:
+                    # if want to remove '[unusedXX]' from vocab
+                    # words = [line.rstrip() for line in f if not line.startswith('[unused')]
+                    for line in f:
+                        extraToken = line.strip()
+                        if extraToken.startswith("[unused"):
+                            words.append(extraToken)
+                        elif extraToken.startswith("##"):
+                            words.append(extraToken)
+                        elif len(extraToken) == 1:
+                            words.append(extraToken)
+                if debug:
+                    debugFilePath = os.path.join(currentPath, "tests", "debugFile.txt")
+                    with open(debugFilePath, "w+") as newFile:
+                        newFile.write("\n".join(words))
+                    print("Final vocab at " + debugFilePath)
+
+            except Exception as e:
+                print(e)
+                warnings.warn("Using default vocab")
+                vocab_path = ""
+                words = []
+
         if vocab_path == "":
             currentPath = os.path.dirname(__file__)
             vocab_path = os.path.join(currentPath, "data/vocab.txt")
-        # self.nlp = spacy.load(
-        #     "en_core_web_sm", disable=["tagger", "parser"]
-        # )  # using default tokeniser with NER
-        with open(vocab_path) as f:
-            # if want to remove '[unusedXX]' from vocab
-            # words = [line.rstrip() for line in f if not line.startswith('[unused')]
-            words = [line.rstrip() for line in f]
+            with open(vocab_path, encoding="utf8") as f:
+                # if want to remove '[unusedXX]' from vocab
+                # words = [line.rstrip() for line in f if not line.startswith('[unused')]
+                words = [line.strip() for line in f]
+
         self.vocab = Vocab(strings=words)
         self.BertTokenizer = AutoTokenizer.from_pretrained("bert-base-cased")
         self.BertModel = AutoModelWithLMHead.from_pretrained("bert-base-cased")
@@ -448,7 +499,7 @@ if __name__ == "__main__":
     doc = nlp(u"Income was $9.4 milion compared to the prior year of $2.7 milion.")
 
     print("=" * 20, "Doc Extention Test", "=" * 20)
-    print(doc._.outcome_spellCheck, "\n")
+    print(doc._.outcome_spellCheck)
 
     print(doc._.contextual_spellCheck)
     print(doc._.performed_spellCheck)
