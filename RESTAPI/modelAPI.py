@@ -1,8 +1,7 @@
-from flask import request
 from contextualSpellCheck.contextualSpellCheck import ContextualSpellCheck
 import spacy
 import json
-from flask import Flask, render_template, request, make_response, jsonify
+from flask import Flask, request, make_response
 
 
 # url
