@@ -28,10 +28,5 @@ setuptools.setup(
         "Development Status :: 4 - Beta",
     ],
     python_requires=">=3.6",
-    install_requires=[
-        "torch==1.6.0",
-        "editdistance==0.5.3",
-        "transformers==3.0.2",
-        "spacy==2.3.2"
-    ]
+    install_requires=["torch", "editdistance", "transformers", "spacy"],
 )
