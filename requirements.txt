@@ -1,6 +1,6 @@
-torch
-editdistance
 Flask
-transformers
 spacy
+editdistance
 pytest
+torch
+transformers
