@@ -149,20 +149,15 @@ class ContextualSpellCheck(object):
             Span.set_extension(
                 "get_has_spellCheck", getter=self.span_require_spell_check
             )
-            Span.set_extension(
-                "score_spellCheck", getter=self.span_score_spell_check
-            )
+            Span.set_extension("score_spellCheck", getter=self.span_score_spell_check)
 
             Token.set_extension(
                 "get_require_spellCheck", getter=token_require_spell_check
             )
             Token.set_extension(
-                "get_suggestion_spellCheck",
-                getter=self.token_suggestion_spell_check,
+                "get_suggestion_spellCheck", getter=self.token_suggestion_spell_check,
             )
-            Token.set_extension(
-                "score_spellCheck", getter=self.token_score_spell_check
-            )
+            Token.set_extension("score_spellCheck", getter=self.token_score_spell_check)
 
     def __call__(self, doc):
         """
@@ -319,20 +314,14 @@ class ContextualSpellCheck(object):
                     update_query,
                 )
 
-            model_input = self.BertTokenizer.encode(
-                update_query, return_tensors="pt"
-            )
+            model_input = self.BertTokenizer.encode(update_query, return_tensors="pt")
             mask_token_index = torch.where(
                 model_input == self.BertTokenizer.mask_token_id
             )[1]
             token_logits = self.BertModel(model_input)[0]
             mask_token_logits = token_logits[0, mask_token_index, :]
-            token_probability = torch.nn.functional.softmax(
-                mask_token_logits, dim=1
-            )
-            top_n_score, top_n_tokens = torch.topk(
-                token_probability, top_n, dim=1
-            )
+            token_probability = torch.nn.functional.softmax(mask_token_logits, dim=1)
+            top_n_score, top_n_tokens = torch.topk(token_probability, top_n, dim=1)
             top_n_tokens = top_n_tokens[0].tolist()
             top_n_score = top_n_score[0].tolist()
             if self.debug:
@@ -390,9 +379,7 @@ class ContextualSpellCheck(object):
             least_edit_dist = self.max_edit_dist
 
             if self.debug:
-                print(
-                    "misspellings_dict[misspell]", misspellings_dict[misspell]
-                )
+                print("misspellings_dict[misspell]", misspellings_dict[misspell])
             for candidate in misspellings_dict[misspell]:
                 edit_dist = editdistance.eval(misspell.text, candidate)
                 if edit_dist < least_edit_dist:
@@ -401,8 +388,7 @@ class ContextualSpellCheck(object):
 
             if self.debug:
                 print(
-                    "response[" + "`" + str(misspell) + "`" + "]",
-                    response[misspell],
+                    "response[" + "`" + str(misspell) + "`" + "]", response[misspell],
                 )
 
         if len(response) > 0:
@@ -590,16 +576,12 @@ if __name__ == "__main__":
     # for issue #1
     # merge_ents = nlp.create_pipe("merge_entities")
     if "parser" not in nlp.pipe_names:
-        raise AttributeError(
-            "parser is required please enable it in nlp pipeline"
-        )
+        raise AttributeError("parser is required please enable it in nlp pipeline")
     checker = ContextualSpellCheck(debug=True)
     nlp.add_pipe(checker)
     # nlp.add_pipe(merge_ents)
 
-    doc = nlp(
-        u"Income was $9.4 milion compared to the prior year of $2.7 milion."
-    )
+    doc = nlp(u"Income was $9.4 milion compared to the prior year of $2.7 milion.")
 
     print("=" * 20, "Doc Extension Test", "=" * 20)
     print(doc._.outcome_spellCheck)

@@ -3,8 +3,7 @@ from contextualSpellCheck import ContextualSpellCheck
 
 nlp = spacy.load("ja_core_news_sm")
 checker = ContextualSpellCheck(
-    model_name="cl-tohoku/bert-base-japanese-whole-word-masking",
-    max_edit_dist=2,
+    model_name="cl-tohoku/bert-base-japanese-whole-word-masking", max_edit_dist=2,
 )
 nlp.add_pipe(checker)
 
