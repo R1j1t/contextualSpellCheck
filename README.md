@@ -32,6 +32,8 @@ Also, please install the dependencies from requirements.txt
 
 ## Usage
 
+**Note:** For other language examples check `examples` folder. 
+
 ### How to load the package in spacy pipeline
 
 ```bash
@@ -40,7 +42,7 @@ Also, please install the dependencies from requirements.txt
 >>> 
 >>> ## We require NER to identify if it is PERSON
 >>> ## also require parser because we use Token.sent for context
->>> nlp = spacy.load("en_core_web_sm")
+>>> nlp = spacy.load("en_core_web_sm") 
 >>> 
 >>> contextualSpellCheck.add_to_pipe(nlp)
 <spacy.lang.en.English object at 0x12839a2d0>
