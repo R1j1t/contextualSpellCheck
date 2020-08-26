@@ -85,7 +85,7 @@ class ContextualSpellCheck(object):
                 # /punctuations/tokenizer specific words like [PAD]/[
                 # unused0]/##M
                 current_path = os.path.dirname(__file__)
-                vocab_path = os.path.join(currentPath, "data", "vocab.txt")
+                vocab_path = os.path.join(current_path, "data", "vocab.txt")
                 extra_token = ["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]"]
                 words.extend(extra_token)
 
