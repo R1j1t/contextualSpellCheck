@@ -182,8 +182,8 @@ Response:
 ## Task List
 
 - [ ] Add support for Real Word Error (RWE) (Big Task)
-- [ ] specify maximum edit distance for `candidateRanking`
-- [ ] allow user to specify bert model
+- [x] specify maximum edit distance for `candidateRanking`
+- [x] allow user to specify bert model
 - [ ] edit distance code optimisation
 - [ ] add multi mask out capability
 - [ ] better candidate generation (maybe by fine tuning the model?)

@@ -4,7 +4,7 @@ import editdistance
 from datetime import datetime
 import os
 import copy
-import warnings
+import warnings, logging
 
 from spacy.tokens import Doc, Token, Span
 from spacy.vocab import Vocab
@@ -116,6 +116,7 @@ class ContextualSpellCheck(object):
         self.max_edit_dist = max_edit_dist
         self.model_name = model_name
         self.vocab = Vocab(strings=words)
+        logging.getLogger("transformers").setLevel(logging.ERROR)
         self.BertTokenizer = AutoTokenizer.from_pretrained(self.model_name)
         self.BertModel = AutoModelForMaskedLM.from_pretrained(self.model_name)
         self.mask = self.BertTokenizer.mask_token
