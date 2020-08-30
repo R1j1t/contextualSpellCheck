@@ -12,26 +12,9 @@ from spacy.vocab import Vocab
 from transformers import AutoModelForMaskedLM, AutoTokenizer
 
 
-def token_require_spell_check(token):
-    """
-    Getter for Token attributes.
-
-    Args:
-        token {`Spacy.Token`} :Token object for the value should be returned
-
-    Returns:
-        List :If no suggestions: False else: True
-    """
-    return any(
-        [
-            token.i == suggestion.i and token.text == suggestion.text
-            for suggestion in token.doc._.suggestions_spellCheck.keys()
-        ]
-    )
-
-
 class ContextualSpellCheck(object):
-    """Class object for Out Of Vocabulary(OOV) corrections 
+    """
+    Class object for Out Of Vocabulary(OOV) corrections
     """
 
     name = "contextual spellchecker"
@@ -537,8 +520,7 @@ class ContextualSpellCheck(object):
                 response[token].append(suggestion_score[0])
         return response
 
-    @staticmethod
-    def doc_outcome_spell_check(doc):
+    def doc_outcome_spell_check(self, doc):
         """
         Getter for Doc attribute
 
