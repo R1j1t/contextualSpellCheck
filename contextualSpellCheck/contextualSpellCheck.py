@@ -558,7 +558,7 @@ if __name__ == "__main__":
     # for issue #1
     # merge_ents = nlp.create_pipe("merge_entities")
     if "parser" not in nlp.pipe_names:
-        raise AttributeError("parser is required please enable it in nlp pipeline")
+        raise AttributeError("parser is required please enable it in nlp " "pipeline")
     checker = ContextualSpellCheck(debug=True)
     nlp.add_pipe(checker)
     # nlp.add_pipe(merge_ents)
