@@ -384,10 +384,16 @@ class ContextualSpellCheck(object):
                     response[misspell] = candidate
 
             if self.debug:
-                print(
-                    "response[" + "`" + str(misspell) + "`" + "]",
-                    response[misspell],
-                )
+                if len(response) != 0:
+                    print(
+                        "response[" + "`" + str(misspell) + "`" + "]",
+                        response[misspell],
+                    )
+                else:
+                    print(
+                        "No candidate selected for max_edit_dist="
+                        + str(self.max_edit_dist)
+                    )
 
         if len(response) > 0:
             doc._.set("suggestions_spellCheck", response)
@@ -400,6 +406,8 @@ class ContextualSpellCheck(object):
                         break
                 update_query += update_token
             doc._.set("outcome_spellCheck", update_query)
+        else:
+            doc._.set("performed_spellCheck", False)
 
         if self.debug:
             print("Final suggestions", doc._.suggestions_spellCheck)
@@ -575,7 +583,7 @@ if __name__ == "__main__":
         raise AttributeError(
             "parser is required please enable it in nlp pipeline"
         )
-    checker = ContextualSpellCheck(debug=True)
+    checker = ContextualSpellCheck(debug=True, max_edit_dist=3)
     nlp.add_pipe(checker)
     # nlp.add_pipe(merge_ents)
 
