@@ -137,7 +137,7 @@ class ContextualSpellCheck(object):
             )
 
             Token.set_extension(
-                "get_require_spellCheck", getter=token_require_spell_check
+                "get_require_spellCheck", getter=self.token_require_spell_check
             )
             Token.set_extension(
                 "get_suggestion_spellCheck",
@@ -499,8 +499,7 @@ class ContextualSpellCheck(object):
         """
         return {token: self.token_score_spell_check(token) for token in span}
 
-    @staticmethod
-    def span_require_spell_check(span):
+    def span_require_spell_check(self, span):
         """
         Getter for Span Object
 
@@ -510,7 +509,7 @@ class ContextualSpellCheck(object):
         Returns:
             Boolean :True if the span requires spellCheck
         """
-        return any([token_require_spell_check(token) for token in span])
+        return any([self.token_require_spell_check(token) for token in span])
 
     @staticmethod
     def doc_suggestions_spell_check(doc):
