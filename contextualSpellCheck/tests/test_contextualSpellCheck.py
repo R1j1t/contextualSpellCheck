@@ -286,7 +286,7 @@ def test_extension2_candidateGenerator(inputSentence, misspell):
     (misspellings, doc) = checker.misspell_identify(doc)
     doc, suggestions = checker.candidate_generator(doc, misspellings)
 
-    ## changes after v0.1.0
+    # changes after v0.1.0
     assert [tokIndex.i for tokIndex in doc._.score_spellCheck.keys()] == [
         tokIndex for tokIndex in misspell.keys()
     ]
@@ -380,7 +380,7 @@ def test_doc_extensions():
     }
     assert doc._.contextual_spellCheck == True
     assert doc._.performed_spellCheck == True
-    ## updated after v0.1
+    # updated after v0.1
     assert [tok.i for tok in doc._.suggestions_spellCheck.keys()] == [
         tok.i for tok in gold_suggestion.keys()
     ]
@@ -499,7 +499,7 @@ def test_token_extension():
 
     assert doc[4]._.get_require_spellCheck == True
     assert doc[4]._.get_suggestion_spellCheck == gold_suggestions
-    ## Match words and score seperatly to incoporate approx fn in pytest
+    # Match words and score separately to incorporate approx fn in pytest
     assert [word_score[0] for word_score in doc[4]._.score_spellCheck] == [
         word_score[0] for word_score in gold_score
     ]
@@ -543,7 +543,7 @@ def test_warning():
         # warnings.simplefilter("default")
 
         with pytest.raises(TypeError) as e:
-            checkertest = ContextualSpellCheck(vocab_path=True)
+            ContextualSpellCheck(vocab_path=True)
             assert (
                 e
                 == "Please check datatype provided. vocab_path should be str, debug and performance should be bool"
@@ -552,7 +552,7 @@ def test_warning():
 
 def test_vocabFile():
     with warnings.catch_warnings(record=True) as w:
-        checkertest = ContextualSpellCheck(vocab_path="testing.txt")
+        ContextualSpellCheck(vocab_path="testing.txt")
         assert any([issubclass(i.category, UserWarning) for i in w])
         assert any(["Using default vocab" in str(i.message) for i in w])
     currentPath = os.path.dirname(__file__)
@@ -560,7 +560,20 @@ def test_vocabFile():
     orgDebugFilePath = os.path.join(currentPath, "originaldebugFile.txt")
     testVocab = os.path.join(currentPath, "testVocab.txt")
     print(testVocab, currentPath, debugPathFile)
-    checkertest = ContextualSpellCheck(vocab_path=testVocab, debug=True)
+    ContextualSpellCheck(vocab_path=testVocab, debug=True)
     with open(orgDebugFilePath) as f1:
         with open(debugPathFile) as f2:
             assert f1.read() == f2.read()
+
+
+def test_bert_model_name():
+    model_name = "a_random_model"
+    error_message = (
+        f"Can't load config for '{model_name}'. Make sure that:\n\n"
+        f"- '{model_name}' is a correct model identifier listed on 'https://huggingface.co/models'\n\n"
+        f"- or '{model_name}' is the correct path to a directory containing a config.json  file\n\n"
+    )
+
+    with pytest.raises(OSError) as e:
+        ContextualSpellCheck(model_name=model_name)
+        assert e == error_message
