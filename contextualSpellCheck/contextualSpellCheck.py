@@ -1,30 +1,46 @@
 import spacy
 import torch
 import editdistance
-import datetime
+from datetime import datetime
 import os
 import copy
-import warnings
+import warnings, logging
 
 from spacy.tokens import Doc, Token, Span
 from spacy.vocab import Vocab
 
-from transformers import AutoModelWithLMHead, AutoTokenizer
+from transformers import AutoModelForMaskedLM, AutoTokenizer
 
 
 class ContextualSpellCheck(object):
-    """Class object for Out Of Vocabulary(OOV) corrections 
+    """
+    Class object for Out Of Vocabulary(OOV) corrections
     """
 
     name = "contextual spellchecker"
 
-    def __init__(self, vocab_path="", debug=False, performance=False):
-        """To create an object for this class. It does not require any special 
+    def __init__(
+        self,
+        vocab_path="",
+        model_name="bert-base-cased",
+        max_edit_dist=10,
+        debug=False,
+        performance=False,
+    ):
+        """To create an object for this class. It does not require any special
 
         Args:
-            vocab_path (str, optional): Vocabulary file path to be used by the model . Defaults to "".
-            debug (bool, optional): This help prints logs as the data flows throught the class. Defaults to False.
-            performance (bool, optional): This is used to print the time taken by individual steps in spell check. Defaults to False.
+            vocab_path (str, optional): Vocabulary file path to be used by the
+                                         model . Defaults to "".
+            model_name (str, optional): Pretrained BERT model name. Defaults to
+                                        "bert-base-cased".
+            max_edit_dist (int, optional): Maximum edit distance between two
+                                           words. Defaults to 10.
+            debug (bool, optional): This help prints logs as the data flows
+                                     through the class. Defaults to False.
+            performance (bool, optional): This is used to print the time taken
+                                          by individual steps in spell check.
+                                          Defaults to False.
         """
         if (
             (type(vocab_path) != type(""))
@@ -32,7 +48,8 @@ class ContextualSpellCheck(object):
             or (type(performance) != type(True))
         ):
             raise TypeError(
-                "Please check datatype provided. vocab_path should be str, debug and performance should be bool"
+                "Please check datatype provided. vocab_path should be str,"
+                " debug and performance should be bool"
             )
 
         if vocab_path != "":
@@ -40,31 +57,43 @@ class ContextualSpellCheck(object):
                 # First open() for user specified word addition to vocab
                 with open(vocab_path, encoding="utf8") as f:
                     # if want to remove '[unusedXX]' from vocab
-                    # words = [line.rstrip() for line in f if not line.startswith('[unused')]
+                    # words = [
+                    #     line.rstrip()
+                    #     for line in f
+                    #     if not line.startswith("[unused")
+                    # ]
                     words = [line.strip() for line in f]
 
-                # The below code adds the neccesary words like numbers/puncutations/tokenizer specific words like [PAD]/[unused0]/##M
-                currentPath = os.path.dirname(__file__)
-                vocab_path = os.path.join(currentPath, "data", "vocab.txt")
-                extraToken = ["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]"]
-                words.extend(extraToken)
+                # The below code adds the necessary words like numbers
+                # /punctuations/tokenizer specific words like [PAD]/[
+                # unused0]/##M
+                current_path = os.path.dirname(__file__)
+                vocab_path = os.path.join(current_path, "data", "vocab.txt")
+                extra_token = ["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]"]
+                words.extend(extra_token)
 
                 with open(vocab_path, encoding="utf8") as f:
                     # if want to remove '[unusedXX]' from vocab
-                    # words = [line.rstrip() for line in f if not line.startswith('[unused')]
+                    # words = [
+                    #     line.rstrip()
+                    #     for line in f
+                    #     if not line.startswith("[unused")
+                    # ]
                     for line in f:
-                        extraToken = line.strip()
-                        if extraToken.startswith("[unused"):
-                            words.append(extraToken)
-                        elif extraToken.startswith("##"):
-                            words.append(extraToken)
-                        elif len(extraToken) == 1:
-                            words.append(extraToken)
+                        extra_token = line.strip()
+                        if extra_token.startswith("[unused"):
+                            words.append(extra_token)
+                        elif extra_token.startswith("##"):
+                            words.append(extra_token)
+                        elif len(extra_token) == 1:
+                            words.append(extra_token)
                 if debug:
-                    debugFilePath = os.path.join(currentPath, "tests", "debugFile.txt")
-                    with open(debugFilePath, "w+") as newFile:
-                        newFile.write("\n".join(words))
-                    print("Final vocab at " + debugFilePath)
+                    debug_file_path = os.path.join(
+                        current_path, "tests", "debugFile.txt"
+                    )
+                    with open(debug_file_path, "w+") as new_file:
+                        new_file.write("\n".join(words))
+                    print("Final vocab at " + debug_file_path)
 
             except Exception as e:
                 print(e)
@@ -73,16 +102,23 @@ class ContextualSpellCheck(object):
                 words = []
 
         if vocab_path == "":
-            currentPath = os.path.dirname(__file__)
-            vocab_path = os.path.join(currentPath, "data/vocab.txt")
+            current_path = os.path.dirname(__file__)
+            vocab_path = os.path.join(current_path, "data/vocab.txt")
             with open(vocab_path, encoding="utf8") as f:
                 # if want to remove '[unusedXX]' from vocab
-                # words = [line.rstrip() for line in f if not line.startswith('[unused')]
+                # words = [
+                #     line.rstrip()
+                #     for line in f
+                #     if not line.startswith("[unused")
+                # ]
                 words = [line.strip() for line in f]
 
+        self.max_edit_dist = max_edit_dist
+        self.model_name = model_name
         self.vocab = Vocab(strings=words)
-        self.BertTokenizer = AutoTokenizer.from_pretrained("bert-base-cased")
-        self.BertModel = AutoModelWithLMHead.from_pretrained("bert-base-cased")
+        logging.getLogger("transformers").setLevel(logging.ERROR)
+        self.BertTokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        self.BertModel = AutoModelForMaskedLM.from_pretrained(self.model_name)
         self.mask = self.BertTokenizer.mask_token
         self.debug = debug
         self.performance = performance
@@ -90,104 +126,116 @@ class ContextualSpellCheck(object):
             Doc.set_extension("contextual_spellCheck", default=True)
             Doc.set_extension("performed_spellCheck", default=False)
 
-            # {originalToken-1:[suggestedToken-1,suggestedToken-2,..],
-            #  originalToken-2:[...]}
             Doc.set_extension("suggestions_spellCheck", default={})
             Doc.set_extension("outcome_spellCheck", default="")
             Doc.set_extension("score_spellCheck", default=None)
 
             Span.set_extension(
-                "get_has_spellCheck", getter=self.span_require_spellCheck
+                "get_has_spellCheck", getter=self.span_require_spell_check
             )
-            Span.set_extension("score_spellCheck", getter=self.span_score_spellCheck)
+            Span.set_extension(
+                "score_spellCheck", getter=self.span_score_spell_check
+            )
 
             Token.set_extension(
-                "get_require_spellCheck", getter=self.token_require_spellCheck
+                "get_require_spellCheck", getter=self.token_require_spell_check
             )
             Token.set_extension(
-                "get_suggestion_spellCheck", getter=self.token_suggestion_spellCheck
+                "get_suggestion_spellCheck",
+                getter=self.token_suggestion_spell_check,
             )
-            Token.set_extension("score_spellCheck", getter=self.token_score_spellCheck)
+            Token.set_extension(
+                "score_spellCheck", getter=self.token_score_spell_check
+            )
 
     def __call__(self, doc):
-        """call function for the class. Used in spacy pipeline
+        """
+        call function for the class. Used in spacy pipeline
 
-        Arguments:
-            doc {`Spacy.Doc`} -- Spacy Doc Object
+        Args:
+            doc {`Spacy.Doc`}: Spacy Doc Object
 
         Returns:
-            `Spacy.Doc` -- Updated doc object with custom extensions values
+            `Spacy.Doc`: Updated doc object with custom extensions values
         """
         if self.performance:
-            modelLodaded = datetime.datetime.now()
-        misspellTokens, doc = self.misspellIdentify(doc)
+            model_loaded = datetime.now()
+        misspell_tokens, doc = self.misspell_identify(doc)
         if self.performance:
-            modelLoadTime = self.timeLog("Misspell identification: ", modelLodaded)
-        if len(misspellTokens) > 0:
-            doc, candidate = self.candidateGenerator(doc, misspellTokens)
+            self.time_log("Misspell identification: ", model_loaded)
+        if len(misspell_tokens) > 0:
+            doc, candidate = self.candidate_generator(doc, misspell_tokens)
             if self.performance:
-                modelLoadTime = self.timeLog("candidate Generator: ", modelLodaded)
-            answer = self.candidateRanking(doc, candidate)
+                self.time_log("candidate Generator: ", model_loaded)
+            self.candidate_ranking(doc, candidate)
             if self.performance:
-                modelLoadTime = self.timeLog("candidate ranking: ", modelLodaded)
+                self.time_log("candidate ranking: ", model_loaded)
         return doc
 
-    def check(self, query=""):
-        """Complete pipeline for **testing purpose only**
+    def check(self, query="", spacy_model="en_core_web_sm"):
+        """
+        Complete pipeline for **testing purpose only**
 
-        Keyword Arguments:
-            query {str} -- query for which spell check model to run (default: {""})
+        Keyword Args:
+            query (str): query for which spell check model to run
+                            (default: {""})
+            spacy_model (str): Name of spacy model
 
         Returns:
-            (str, `Doc`) -- returns updated query (if no oov words then "") and updated Doc Object
+            (str, `Doc`): returns updated query (if no oov words then "")
+                          and updated Doc Object
         """
         if type(query) != str and len(query) == 0:
-            return ("Invalid query, expected non empty `str` but passed", query)
+            return "Invalid query, expected non empty `str` but passed", query
 
-        nlp = spacy.load("en_core_web_sm", disable=["tagger", "parser"])
+        nlp = spacy.load(spacy_model, disable=["tagger", "parser"])
         doc = nlp(query)
-        modelLodaded = datetime.datetime.now()
-        misspellTokens, doc = self.misspellIdentify(doc)
-        modelLoadTime = self.timeLog("Misspell identification: ", modelLodaded)
-        updatedQuery = ""
-        if len(misspellTokens) > 0:
-            candidate = self.candidateGenerator(doc, misspellTokens)
-            answer = self.candidateRanking(candidate)
+        model_loaded = datetime.now()
+        misspell_tokens, doc = self.misspell_identify(doc)
+        self.time_log("Misspell identification: ", model_loaded)
+        update_query = ""
+        if len(misspell_tokens) > 0:
+            candidate = self.candidate_generator(doc, misspell_tokens)
+            answer = self.candidate_ranking(candidate)
             for i in doc:
-                if i in misspellTokens:
-                    updatedQuery += answer[i] + i.whitespace_
+                if i in misspell_tokens:
+                    update_query += answer[i] + i.whitespace_
                 else:
-                    updatedQuery += i.text_with_ws
+                    update_query += i.text_with_ws
 
-            print("Did you mean: ", updatedQuery)
-            doc._.set("outcome_spellCheck", updatedQuery)
+            print("Did you mean: ", update_query)
+            doc._.set("outcome_spellCheck", update_query)
             # problem with below as it modifies the original object
         #             with doc.retokenize() as retokenizer:
         #                 print("Original text:",retokenizer.merge(doc[:]))
-        return updatedQuery, doc
+        return update_query, doc
 
-    def misspellIdentify(self, doc, query=""):
+    def misspell_identify(self, doc, query=""):
         """To identify misspelled words from the query
 
-        At present, All the following criteria should be met for word to be misspelled
+        At present, All the following criteria should be met for word to be
+        misspelled
         1. Should not be in our vocab
         2. should not be a Person
         3. Should not be a number
         4. Should not be a url
+        5. Should not be a space
+        6. Should not be punctuation
+        7. Should not be a Geopolitical Entity
+        8. Should not be a Organisation
 
-        Arguments:
-            doc {`Spacy.Doc`} -- Spacy doc object as input
+        Args:
+            doc {`Spacy.Doc`}: Spacy doc object as input
 
-        Keyword Arguments:
-            query {str} -- not used now (default: {""})
+        Keyword Args:
+            query {str}: not used now (default: {""})
 
         Returns:
-            `tuple` -- returns `List[`Spacy.Token`]` and `Spacy.Doc`
+            `tuple`: returns `List[`Spacy.Token`]` and `Spacy.Doc`
         """
 
         docCopy = copy.deepcopy(doc)
 
-        # doc = self.nlp(query)
         misspell = []
         for token in docCopy:
             if (
@@ -200,59 +248,75 @@ class ContextualSpellCheck(object):
                 and (not token.is_space)
                 and (not token.is_punct)
                 and (token.ent_type_ != "GPE")
+                and (token.ent_type_ != "ORG")
             ):
-
                 misspell.append(token)
 
         if self.debug:
             print("misspell identified: ", misspell)
-        return (misspell, doc)
+        return misspell, doc
 
-    def candidateGenerator(self, doc, misspellings, top_n=10):
+    def candidate_generator(self, doc, misspellings, top_n=10):
         """Returns Candidates for misspell words
 
         This function is responsible for generating candidate list for misspell
-        using BERT. The misspell is masked with a token (eg [MASK]) and the model tries to 
-        predict `n` candidates for that mask. The `doc` is used to provide sentence (context) for the mask
+        using BERT. The misspell is masked with a token (eg [MASK]) and the
+        model tries to predict `n` candidates for that mask. The `doc` is used
+         to provide sentence (context) for the mask
 
 
-        Arguments:
-            doc {`Spacy.Doc`} -- Spacy Doc object, used to provide context to the model
-            misspellings {List(`Spacy.Token`)} -- Contains List of `Token` object types from spacy to preserve meta information of the token 
+        Args:
+            doc {`Spacy.Doc`}: Spacy Doc object, used to provide context to
+                               the model misspellings
+           {List(`Spacy.Token`)}: Contains List of `Token` object types from
+                                  spacy to preserve meta information of the
+                                  token
 
-        Keyword Arguments:
-            top_n {int} -- # suggestions to be considered (default: {10})
+        Keyword Args:
+            top_n {int}:  # suggestions to be considered (default: {10})
 
         Returns:
-            Dict{`Token`:List[{str}]} -- Eg of return type {misspell-1:['candidate-1','candidate-2', ...],
-                            misspell-2:['candidate-1','candidate-2'. ...]}
+            Dict{`Token`:List[{str}]}: Eg of return type {misspell-1:
+                                      ['candidate-1','candidate-2', ...],
+                                      misspell-2:['candidate-1','candidate-2'
+                                      . ...]}
         """
         response = {}
         score = {}
 
         for token in misspellings:
-            updatedQuery = ""
-            # Instead of using complete doc, we use sentence to provide context and improve performance
+            update_query = ""
+            # Instead of using complete doc, we use sentence to provide context
+            # and improve performance
             if self.debug:
                 print(token.text, token.sent)
             for i in token.sent:
                 if i.i == token.i:
-                    updatedQuery += self.mask + i.whitespace_
+                    update_query += self.mask + i.whitespace_
                 else:
-                    updatedQuery += i.text_with_ws
+                    update_query += i.text_with_ws
             if self.debug:
                 print(
-                    "\nFor", "`" + token.text + "`", "updated query is:\n", updatedQuery
+                    "\nFor",
+                    "`" + token.text + "`",
+                    "updated query is:\n",
+                    update_query,
                 )
 
-            model_input = self.BertTokenizer.encode(updatedQuery, return_tensors="pt")
+            model_input = self.BertTokenizer.encode(
+                update_query, return_tensors="pt"
+            )
             mask_token_index = torch.where(
                 model_input == self.BertTokenizer.mask_token_id
             )[1]
             token_logits = self.BertModel(model_input)[0]
             mask_token_logits = token_logits[0, mask_token_index, :]
-            token_probability = torch.nn.functional.softmax(mask_token_logits, dim=1)
-            top_n_score, top_n_tokens = torch.topk(token_probability, top_n, dim=1)
+            token_probability = torch.nn.functional.softmax(
+                mask_token_logits, dim=1
+            )
+            top_n_score, top_n_tokens = torch.topk(
+                token_probability, top_n, dim=1
+            )
             top_n_tokens = top_n_tokens[0].tolist()
             top_n_score = top_n_score[0].tolist()
             if self.debug:
@@ -272,10 +336,6 @@ class ContextualSpellCheck(object):
                     for i in range(top_n)
                 ]
 
-            # for candidate in top_5_tokens:
-            # response[token].append(self.BertTokenizer.decode([candidate]))
-            # print(updatedQuery.replace(self.mask, self.BertTokenizer.decode([candidate])))
-
             if self.debug:
                 print(
                     "response[" + "`" + str(token) + "`" + "]: ",
@@ -288,83 +348,95 @@ class ContextualSpellCheck(object):
             doc._.set("performed_spellCheck", True)
             doc._.set("score_spellCheck", score)
 
-        return (doc, response)
+        return doc, response
 
-    def candidateRanking(self, doc, misspellingsDict):
+    def candidate_ranking(self, doc, misspellings_dict):
         """Ranking the candidates based on edit Distance
 
-        At present using a library to calculate edit distance 
-        between actual word and candidate words. Candidate word 
-        for which edit distance is lowest is selected. If least 
-        edit distance is same then word with higher probability 
+        At present using a library to calculate edit distance
+        between actual word and candidate words. Candidate word
+        for which edit distance is lowest is selected. If least
+        edit distance is same then word with higher probability
         is selected by default
 
-        Arguments:
-            misspellingsDict {Dict{`Token`:List[{str}]}} -- 
-            Orginal token is the key and candidate words are the values 
+        Args:
+            misspellingsDict {Dict{`Token`:List[{str}]}}:
+            Original token is the key and candidate words are the values
 
         Returns:
-            Dict{`Token`:{str}} -- Eg of return type {misspell-1:'BEST-CANDIDATE'}
+            Dict{`Token`:{str}}: Eg of return type {misspell-1:'BEST-CANDIDATE'}
         """
 
         response = {}
         #         doc = self.nlp(query)
-        for misspell in misspellingsDict:
-            ## Init least_edit distance
-            least_edit_dist = 100
+        for misspell in misspellings_dict:
+            # Init least_edit distance
+            least_edit_dist = self.max_edit_dist
 
             if self.debug:
-                print("misspellingsDict[misspell]", misspellingsDict[misspell])
-            for candidate in misspellingsDict[misspell]:
+                print(
+                    "misspellings_dict[misspell]", misspellings_dict[misspell]
+                )
+            for candidate in misspellings_dict[misspell]:
                 edit_dist = editdistance.eval(misspell.text, candidate)
                 if edit_dist < least_edit_dist:
                     least_edit_dist = edit_dist
                     response[misspell] = candidate
-                    tempToken = misspell
 
             if self.debug:
-                print("response[" + "`" + str(misspell) + "`" + "]", response[misspell])
+                if len(response) != 0:
+                    print(
+                        "response[" + "`" + str(misspell) + "`" + "]",
+                        response[misspell],
+                    )
+                else:
+                    print(
+                        "No candidate selected for max_edit_dist="
+                        + str(self.max_edit_dist)
+                    )
 
         if len(response) > 0:
             doc._.set("suggestions_spellCheck", response)
-            updatedQuery = ""
+            update_query = ""
             for i in doc:
-                updatedToken = i.text_with_ws
+                update_token = i.text_with_ws
                 for misspell in response.keys():
                     if i.i == misspell.i:
-                        updatedToken = response[misspell] + misspell.whitespace_
+                        update_token = response[misspell] + misspell.whitespace_
                         break
-                updatedQuery += updatedToken
-            doc._.set("outcome_spellCheck", updatedQuery)
+                update_query += update_token
+            doc._.set("outcome_spellCheck", update_query)
+        else:
+            doc._.set("performed_spellCheck", False)
 
         if self.debug:
             print("Final suggestions", doc._.suggestions_spellCheck)
 
         return response
 
-    def timeLog(self, fnName, relativeTime):
+    @staticmethod
+    def time_log(fn_name, relative_time):
         """For time log
 
-        Arguments:
-            fnName {str} -- function name to print
-            relativeTime {datetime} -- previous date time for subtraction
+        Args:
+            fnName {str}: function name to print
+            relativeTime {datetime}: previous date time for subtraction
 
         Returns:
-            datetime -- datetime of current logging
+            datetime: datetime of current logging
         """
 
-        timeNow = datetime.datetime.now()
-        print(fnName, "took: ", timeNow - relativeTime)
-        return datetime.datetime.now()
+        time_now = datetime.now()
+        print(fn_name, "took: ", time_now - relative_time)
+        return datetime.now()
 
-    def token_require_spellCheck(self, token):
-        """Getter for Token attributes. 
-
-        Arguments:
-            token {`Spacy.Token`} -- Token object for the value should be returned
-
+    @staticmethod
+    def token_require_spell_check(token):
+        """Getter for Token attributes.
+        Args:
+            token {`Spacy.Token`}: Token object for the value should be returned
         Returns:
-            List -- If no suggestions: False else: True
+            List: If no suggestions: False else: True
         """
         return any(
             [
@@ -373,14 +445,17 @@ class ContextualSpellCheck(object):
             ]
         )
 
-    def token_suggestion_spellCheck(self, token):
-        """Getter for Token attributes. 
+    @staticmethod
+    def token_suggestion_spell_check(token):
+        """
+        Getter for Token attributes.
 
-        Arguments:
-            token {`Spacy.Token`} -- Token object for the value should be returned
+        Args:
+            token {`Spacy.Token`}: Token object for the value should be returned
 
         Returns:
-            List -- If no suggestions: [] else: List['suggestion-1','suggestion-1',...] 
+            List: If no suggestions: [] else: List['suggestion-1','
+                  suggestion-1',...]
         """
         for suggestion in token.doc._.suggestions_spellCheck.keys():
             if token.i == suggestion.i:
@@ -388,18 +463,22 @@ class ContextualSpellCheck(object):
                     return token.doc._.suggestions_spellCheck[suggestion]
                 else:
                     warnings.warn(
-                        "Position of tokens modified by downstream element in pipeline eg. merge_entities"
+                        "Position of tokens modified by downstream element "
+                        "in pipeline eg. merge_entities"
                     )
         return ""
 
-    def token_score_spellCheck(self, token):
-        """Getter for Token attributes. 
+    @staticmethod
+    def token_score_spell_check(token):
+        """
+        Getter for Token attributes.
 
-        Arguments:
-            token {`Spacy.Token`} -- Token object for the value should be returned
+        Args:
+            token {`Spacy.Token`} :Token object for the value should be returned
 
         Returns:
-            List -- If no suggestions: [] else: List[('suggestion-1',score-1), ('suggestion-1',score-2), ...] 
+            List :If no suggestions: [] else: List[('suggestion-1',score-1),
+                 ('suggestion-1',score-2), ...]
         """
         if token.doc._.score_spellCheck is None:
             return []
@@ -409,40 +488,49 @@ class ContextualSpellCheck(object):
                     return token.doc._.score_spellCheck[suggestion]
                 else:
                     warnings.warn(
-                        "Position of tokens modified by downstream element in pipeline eg. merge_entities"
+                        "Position of tokens modified by downstream element"
+                        " in pipeline eg. merge_entities"
                     )
         return []
 
-    def span_score_spellCheck(self, span):
-        """Getter for Span Object
-
-        Arguments:
-            span {`Spacy.Span`} -- Span object for which value should be returned
-
-        Returns:
-            Dict(`Token`:List(str,int)) -- for every token it will return (suggestion,score) eg: {token-1: [], token-2: [], token-3: [('suggestion-1', score-1), ...], ...} 
+    def span_score_spell_check(self, span):
         """
-        return {token: self.token_score_spellCheck(token) for token in span}
+        Getter for Span Object
 
-    def span_require_spellCheck(self, span):
-        """Getter for Span Object
-
-        Arguments:
-            span {`Spacy.Span`} -- Span object for which value should be returned
+        Args:
+            span {`Spacy.Span`} :Span object for which value should be returned
 
         Returns:
-            Boolean -- True if the span requires spellCheck
+            Dict(`Token`:List(str,int)) :for every token it will return
+                                        (suggestion,score) eg: {token-1: [],
+                                        token-2: [], token-3: [('suggestion-1',
+                                        score-1), ...], ...}
         """
-        return any([self.token_require_spellCheck(token) for token in span])
+        return {token: self.token_score_spell_check(token) for token in span}
 
-    def doc_suggestions_spellCheck(self, doc):
-        """Getter for Doc attribute
+    def span_require_spell_check(self, span):
+        """
+        Getter for Span Object
 
-        Arguments:
-            doc {`Spacy.Doc`} -- Doc object for which value should be returned
+        Args:
+            span {`Spacy.Span`} :Span object for which value should be returned
 
         Returns:
-            Dict(`Spacy.Token`:List(str)) -- {misspell-1: ['suggestion-1', 'suggestion-2'...]}
+            Boolean :True if the span requires spellCheck
+        """
+        return any([self.token_require_spell_check(token) for token in span])
+
+    @staticmethod
+    def doc_suggestions_spell_check(doc):
+        """
+        Getter for Doc attribute
+
+        Args:
+            doc {`Spacy.Doc`} :Doc object for which value should be returned
+
+        Returns:
+            Dict(`Spacy.Token`:List(str)) :{misspell-1: ['suggestion-1',
+                                            'suggestion-2'...]}
         """
         response = {}
         if doc._.score_spellCheck is None:
@@ -454,35 +542,36 @@ class ContextualSpellCheck(object):
                 response[token].append(suggestion_score[0])
         return response
 
-    def doc_outcome_spellCheck(self, doc):
-        """Getter for Doc attribute
+    def doc_outcome_spell_check(self, doc):
+        """
+        Getter for Doc attribute
 
-        Arguments:
-            doc {`Spacy.Doc`} -- Doc object for which value should be returned
+        Args:
+            doc {`Spacy.Doc`} :Doc object for which value should be returned
 
         Returns:
-            str -- updated sentence
+            str :updated sentence
         """
         if not doc._.performed_spellCheck:
             return ""
 
-        updatedQuery = ""
+        update_query = ""
         suggestions = doc._.suggestions_spellCheck
 
         for i in doc:
-            updatedToken = i.text_with_ws
+            update_token = i.text_with_ws
             for misspell in suggestions.keys():
                 if misspell.text_with_ws in i.text_with_ws:
-                    updatedToken = suggestions[misspell] + misspell.whitespace_
+                    update_token = suggestions[misspell] + misspell.whitespace_
                     suggestions.remove(misspell)
                     break
 
-            updatedQuery += updatedToken
+            update_query += update_token
 
         if self.debug:
-            print("Did you mean: ", updatedQuery)
+            print("Did you mean: ", update_query)
 
-        return updatedQuery
+        return update_query
 
 
 if __name__ == "__main__":
@@ -491,14 +580,18 @@ if __name__ == "__main__":
     # for issue #1
     # merge_ents = nlp.create_pipe("merge_entities")
     if "parser" not in nlp.pipe_names:
-        raise AttributeError("parser is required please enable it in nlp pipeline")
-    checker = ContextualSpellCheck(debug=True)
+        raise AttributeError(
+            "parser is required please enable it in nlp pipeline"
+        )
+    checker = ContextualSpellCheck(debug=True, max_edit_dist=3)
     nlp.add_pipe(checker)
     # nlp.add_pipe(merge_ents)
 
-    doc = nlp(u"Income was $9.4 milion compared to the prior year of $2.7 milion.")
+    doc = nlp(
+        "Income was $9.4 milion compared to the prior year of $2.7 milion."
+    )
 
-    print("=" * 20, "Doc Extention Test", "=" * 20)
+    print("=" * 20, "Doc Extension Test", "=" * 20)
     print(doc._.outcome_spellCheck)
 
     print(doc._.contextual_spellCheck)
@@ -507,7 +600,7 @@ if __name__ == "__main__":
     print(doc._.score_spellCheck)
 
     token_pos = 4
-    print("=" * 20, "Token Extention Test", "=" * 20)
+    print("=" * 20, "Token Extension Test", "=" * 20)
     print(doc[token_pos].text, doc[token_pos].i)
     print(doc[token_pos]._.get_require_spellCheck)
     print(doc[token_pos]._.get_suggestion_spellCheck)
@@ -515,7 +608,7 @@ if __name__ == "__main__":
 
     span_start = token_pos - 2
     span_end = token_pos + 2
-    print("=" * 20, "Span Extention Test", "=" * 20)
+    print("=" * 20, "Span Extension Test", "=" * 20)
     print(doc[span_start:span_end].text)
     print(doc[span_start:span_end]._.get_has_spellCheck)
     print(doc[span_start:span_end]._.score_spellCheck)
