@@ -142,3 +142,6 @@ peter's code/
 *.pptx
 *.ipynb
 contextualSpellCheck/tests/debugFile.txt
+
+# vs code ignore
+.vscode/
