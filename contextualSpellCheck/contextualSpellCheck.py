@@ -34,6 +34,12 @@ class ContextualSpellCheck(object):
             raise TypeError(
                 "Please check datatype provided. vocab_path should be str, debug and performance should be bool"
             )
+        try:
+            int(float(max_edit_dist))
+        except ValueError as identifier:
+            raise ValueError(
+                f"cannot convert {max_edit_dist} to int. Please provide a valid integer"
+            )
 
         if vocab_path != "":
             try:
@@ -80,6 +86,8 @@ class ContextualSpellCheck(object):
                 # words = [line.rstrip() for line in f if not line.startswith('[unused')]
                 words = [line.strip() for line in f]
 
+        self.max_edit_dist = int(float(max_edit_dist))
+        self.model_name = model_name
         self.vocab = Vocab(strings=words)
         self.BertTokenizer = AutoTokenizer.from_pretrained("bert-base-cased")
         self.BertModel = AutoModelWithLMHead.from_pretrained("bert-base-cased")

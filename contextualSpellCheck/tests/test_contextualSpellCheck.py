@@ -502,9 +502,21 @@ def test_warning():
                 e
                 == "Please check datatype provided. vocab_path should be str, debug and performance should be bool"
             )
+        max_edit_distance = "non_int_or_float"
+        with pytest.raises(ValueError) as e:
+            ContextualSpellCheck(max_edit_dist=max_edit_distance)
+            assert (
+                e
+                == f"cannot convert {max_edit_distance} to int. Please provide a valid integer"
+            )
+
+    try:
+        ContextualSpellCheck(max_edit_dist="3.1")
+    except Exception as uncatched_error:
+        pytest.fail(str(uncatched_error))
 
 
-def test_vocabFile():
+def test_vocab_file():
     with warnings.catch_warnings(record=True) as w:
         checkertest = ContextualSpellCheck(vocab_path="testing.txt")
         assert any([issubclass(i.category, UserWarning) for i in w])
@@ -518,3 +530,58 @@ def test_vocabFile():
     with open(orgDebugFilePath) as f1:
         with open(debugPathFile) as f2:
             assert f1.read() == f2.read()
+
+
+def test_bert_model_name():
+    model_name = "a_random_model"
+    error_message = (
+        f"Can't load config for '{model_name}'. Make sure that:\n\n"
+        f"- '{model_name}' is a correct model identifier listed on 'https://huggingface.co/models'\n\n"
+        f"- or '{model_name}' is the correct path to a directory containing a config.json  file\n\n"
+    )
+
+    with pytest.raises(OSError) as e:
+        ContextualSpellCheck(model_name=model_name)
+        assert e == error_message
+
+
+def test_correct_model_name():
+    model_name = "TurkuNLP/bert-base-finnish-cased-v1"
+    try:
+        ContextualSpellCheck(model_name=model_name)
+    except OSError:
+        pytest.fail("Specificed model is not present in transformers")
+    except Exception as uncatched_error:
+        pytest.fail(str(uncatched_error))
+
+
+@pytest.mark.parametrize(
+    "max_edit_distance,expected_spell_check_flag",
+    [(0, False), (1, False), (2, True), (3, True)],
+)
+def test_max_edit_dist(max_edit_distance, expected_spell_check_flag):
+    if "contextual spellchecker" in nlp.pipe_names:
+        nlp.remove_pipe("contextual spellchecker")
+    checker_edit_dist = ContextualSpellCheck(max_edit_dist=max_edit_distance)
+    nlp.add_pipe(checker_edit_dist)
+    doc = nlp(
+        "Income was $9.4 milion compared to the prior year of $2.7 milion."
+    )
+
+    # To check the status of `performed_spell_check` flag
+    assert doc[4]._.get_require_spellCheck == expected_spell_check_flag
+    assert doc[3:5]._.get_has_spellCheck == expected_spell_check_flag
+    assert doc._.performed_spellCheck == expected_spell_check_flag
+
+    # To check the response of "suggestions_spellCheck"
+    gold_outcome = (
+        "Income was $9.4 million compared to the prior year of $2.7 million."
+    )
+    gold_token = "million"
+    gold_outcome = gold_outcome if expected_spell_check_flag else ""
+    gold_token = gold_token if expected_spell_check_flag else ""
+    print("gold_outcome:", gold_outcome, "gold_token:", gold_token)
+    assert doc[4]._.get_suggestion_spellCheck == gold_token
+    assert doc._.outcome_spellCheck == gold_outcome
+
+    nlp.remove_pipe("contextual spellchecker")

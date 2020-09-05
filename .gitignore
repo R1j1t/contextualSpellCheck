@@ -142,3 +142,4 @@ peter's code/
 *.pptx
 *.ipynb
 contextualSpellCheck/tests/debugFile.txt
+.vscode/settings.json
