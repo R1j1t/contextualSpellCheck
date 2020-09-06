@@ -32,7 +32,7 @@ Also, please install the dependencies from requirements.txt
 
 ## Usage
 
-**Note:** For other language examples check `examples` folder. 
+**Note:** For other language examples check [`examples`](https://github.com/R1j1t/contextualSpellCheck/tree/master/examples) folder. 
 
 ### How to load the package in spacy pipeline
 
