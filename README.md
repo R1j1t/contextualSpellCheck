@@ -189,6 +189,8 @@ Response:
 - [ ] better candidate generation (maybe by fine tuning the model?)
 - [ ] add metric by testing on datasets
 - [ ] Improve documentation
+- [ ] Add examples for other langauges
+- [ ] use piece wise tokeniser when identifying the misspell
 
 ## Support and contribution
 
