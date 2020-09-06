@@ -51,6 +51,12 @@ class ContextualSpellCheck(object):
                 "Please check datatype provided. vocab_path should be str,"
                 " debug and performance should be bool"
             )
+        try:
+            int(float(max_edit_dist))
+        except ValueError as identifier:
+            raise ValueError(
+                f"cannot convert {max_edit_dist} to int. Please provide a valid integer"
+            )
 
         if vocab_path != "":
             try:
@@ -101,23 +107,14 @@ class ContextualSpellCheck(object):
                 vocab_path = ""
                 words = []
 
-        if vocab_path == "":
-            current_path = os.path.dirname(__file__)
-            vocab_path = os.path.join(current_path, "data/vocab.txt")
-            with open(vocab_path, encoding="utf8") as f:
-                # if want to remove '[unusedXX]' from vocab
-                # words = [
-                #     line.rstrip()
-                #     for line in f
-                #     if not line.startswith("[unused")
-                # ]
-                words = [line.strip() for line in f]
-
-        self.max_edit_dist = max_edit_dist
+        self.max_edit_dist = int(float(max_edit_dist))
         self.model_name = model_name
+        self.BertTokenizer = AutoTokenizer.from_pretrained(self.model_name)
+
+        if vocab_path == "":
+            words = list(self.BertTokenizer.get_vocab().keys())
         self.vocab = Vocab(strings=words)
         logging.getLogger("transformers").setLevel(logging.ERROR)
-        self.BertTokenizer = AutoTokenizer.from_pretrained(self.model_name)
         self.BertModel = AutoModelForMaskedLM.from_pretrained(self.model_name)
         self.mask = self.BertTokenizer.mask_token
         self.debug = debug
@@ -234,6 +231,9 @@ class ContextualSpellCheck(object):
             `tuple`: returns `List[`Spacy.Token`]` and `Spacy.Doc`
         """
 
+        # deep copy is required to preserve individual token info
+        # from objects in pipeline which can modify token info
+        # like merge_entities
         docCopy = copy.deepcopy(doc)
 
         misspell = []
