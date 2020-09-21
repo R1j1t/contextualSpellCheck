@@ -183,7 +183,7 @@ class ContextualSpellCheck(object):
             (str, `Doc`): returns updated query (if no oov words then "")
                           and updated Doc Object
         """
-        if type(query) != str and len(query) == 0:
+        if not isinstance(query, str) and len(query) == 0:
             return "Invalid query, expected non empty `str` but passed", query
 
         nlp = spacy.load(spacy_model, disable=["tagger", "parser"])

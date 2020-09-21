@@ -1,6 +1,6 @@
 [flake8]
 ignore = W503
-exclude = .git,__pycache__,contextualSpellCheck/tests
+exclude = .git,__pycache__,build,peters_code,.ipynb_checkpoints,setup.py
 max-complexity = 15
 per-file-ignores =
     # imported but unused
