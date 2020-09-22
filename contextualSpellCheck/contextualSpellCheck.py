@@ -1,14 +1,14 @@
+import copy
+import logging
+import os
+import warnings
+from datetime import datetime
+
+import editdistance
 import spacy
 import torch
-import editdistance
-from datetime import datetime
-import os
-import copy
-import warnings, logging
-
 from spacy.tokens import Doc, Token, Span
 from spacy.vocab import Vocab
-
 from transformers import AutoModelForMaskedLM, AutoTokenizer
 
 
@@ -43,9 +43,9 @@ class ContextualSpellCheck(object):
                                           Defaults to False.
         """
         if (
-            (type(vocab_path) != type(""))
-            or (type(debug) != type(True))
-            or (type(performance) != type(True))
+            not isinstance(vocab_path, str)
+            or not isinstance(debug, type(True))
+            or not isinstance(performance, type(True))
         ):
             raise TypeError(
                 "Please check datatype provided. vocab_path should be str,"
@@ -53,9 +53,10 @@ class ContextualSpellCheck(object):
             )
         try:
             int(float(max_edit_dist))
-        except ValueError as identifier:
+        except ValueError:
             raise ValueError(
-                f"cannot convert {max_edit_dist} to int. Please provide a valid integer"
+                f"cannot convert {max_edit_dist} to int. Please provide a "
+                f"valid integer "
             )
 
         if vocab_path != "":
@@ -182,7 +183,7 @@ class ContextualSpellCheck(object):
             (str, `Doc`): returns updated query (if no oov words then "")
                           and updated Doc Object
         """
-        if type(query) != str and len(query) == 0:
+        if not isinstance(query, str) and len(query) == 0:
             return "Invalid query, expected non empty `str` but passed", query
 
         nlp = spacy.load(spacy_model, disable=["tagger", "parser"])
