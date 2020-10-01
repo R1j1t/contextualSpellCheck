@@ -1,7 +1,8 @@
 import pytest
 import spacy
 from pytest import approx
-import warnings, os
+import warnings
+import os
 
 from ..contextualSpellCheck import ContextualSpellCheck
 
@@ -43,7 +44,8 @@ def test_type_misspellIdentify(inputSentence, misspell):
 @pytest.mark.parametrize(
     "inputSentence, misspell",
     [
-        ("Income was $9.4 milion compared to the prior year of $2.7 milion.", [4, 13]),
+        ("Income was $9.4 milion compared to the prior year of $2.7 milion.",
+         [4, 13]),
         ("This packge was cretaed in 2020", [1, 3]),
     ],
 )
@@ -52,7 +54,7 @@ def test_identify_misspellIdentify(inputSentence, misspell):
     doc = nlp(inputSentence)
     checkerReturn = checker.misspellIdentify(doc)[0]
     assert type(checkerReturn) == list
-    ## Changed the approach after v0.1.0
+    # Changed the approach after v0.1.0
     assert [tok.text_with_ws for tok in checkerReturn] == [
         doc[i].text_with_ws for i in misspell
     ]
@@ -186,7 +188,7 @@ def test_identify_candidateGenerator(inputSentence, misspell):
     doc = nlp(inputSentence)
     (misspellings, doc) = checker.misspellIdentify(doc)
     doc, suggestions = checker.candidateGenerator(doc, misspellings)
-    ## changed after v1.0 because of deepCopy creatng issue with ==
+    # changed after v1.0 because of deepCopy creatng issue with ==
     # gold_suggestions = {doc[key]: value for key, value in misspell.items()}
     assert [tok.i for tok in suggestions] == [key for key in misspell.keys()]
     assert [suggString for suggString in suggestions.values()] == [
@@ -266,7 +268,7 @@ def test_extension2_candidateGenerator(inputSentence, misspell):
     (misspellings, doc) = checker.misspellIdentify(doc)
     doc, suggestions = checker.candidateGenerator(doc, misspellings)
 
-    ## changes after v0.1.0
+    # changes after v0.1.0
     assert [tokIndex.i for tokIndex in doc._.score_spellCheck.keys()] == [
         tokIndex for tokIndex in misspell.keys()
     ]
@@ -301,9 +303,10 @@ def test_ranking_candidateRanking(inputSentence, misspell):
     (misspellings, doc) = checker.misspellIdentify(doc)
     doc, suggestions = checker.candidateGenerator(doc, misspellings)
     selectedWord = checker.candidateRanking(doc, suggestions)
-    ## changes made after v0.1
+    # changes made after v0.1
     # assert selectedWord == {doc[key]: value for key, value in misspell.items()}
-    assert [tok.i for tok in selectedWord.keys()] == [tok for tok in misspell.keys()]
+    assert [tok.i for tok in selectedWord.keys()] == [
+        tok for tok in misspell.keys()]
     assert [tokString for tokString in selectedWord.values()] == [
         tok for tok in misspell.values()
     ]
@@ -352,9 +355,9 @@ def test_doc_extensions():
             ("%", 0.00041),
         ],
     }
-    assert doc._.contextual_spellCheck == True
-    assert doc._.performed_spellCheck == True
-    ## updated after v0.1
+    assert doc._.contextual_spellCheck is True
+    assert doc._.performed_spellCheck is True
+    # updated after v0.1
     assert [tok.i for tok in doc._.suggestions_spellCheck.keys()] == [
         tok.i for tok in gold_suggestion.keys()
     ]
@@ -380,7 +383,8 @@ def test_doc_extensions():
         for value in doc._.score_spellCheck.values()
         for word_score in value
     ] == approx(
-        [word_score[1] for value in gold_score.values() for word_score in value],
+        [word_score[1] for value in gold_score.values()
+         for word_score in value],
         rel=1e-4,
         abs=1e-4,
     )
@@ -390,7 +394,7 @@ def test_doc_extensions():
 def test_span_extensions():
     try:
         nlp.add_pipe(checker)
-    except:
+    except Exception:
         print("contextual SpellCheck already in pipeline")
     doc = nlp("Income was $9.4 milion compared to the prior year of $2.7 milion.")
 
@@ -412,7 +416,7 @@ def test_span_extensions():
         doc[5]: [],
     }
 
-    assert doc[2:6]._.get_has_spellCheck == True
+    assert doc[2:6]._.get_has_spellCheck is True
     # splitting components to make use of approx function
     print(doc[2:6]._.score_spellCheck)
     print(gold_score)
@@ -427,7 +431,8 @@ def test_span_extensions():
         for value in doc[2:6]._.score_spellCheck.values()
         for word_score in value
     ] == approx(
-        [word_score[1] for value in gold_score.values() for word_score in value],
+        [word_score[1] for value in gold_score.values()
+         for word_score in value],
         rel=1e-4,
         abs=1e-4,
     )
@@ -455,9 +460,9 @@ def test_token_extension():
         ("USD", 0.00113),
     ]
 
-    assert doc[4]._.get_require_spellCheck == True
+    assert doc[4]._.get_require_spellCheck is True
     assert doc[4]._.get_suggestion_spellCheck == gold_suggestions
-    ## Match words and score seperatly to incoporate approx fn in pytest
+    # Match words and score seperatly to incoporate approx fn in pytest
     assert [word_score[0] for word_score in doc[4]._.score_spellCheck] == [
         word_score[0] for word_score in gold_score
     ]
@@ -479,7 +484,7 @@ def test_warning():
         # warnings.simplefilter("always")
         # Trigger a warning.
 
-        assert doc[4]._.get_require_spellCheck == False
+        assert doc[4]._.get_require_spellCheck is False
         assert doc[4]._.get_suggestion_spellCheck == ""
         assert doc[4]._.score_spellCheck == []
         # Verify Warning

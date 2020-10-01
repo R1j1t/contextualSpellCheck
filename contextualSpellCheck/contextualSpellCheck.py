@@ -13,13 +13,13 @@ from transformers import AutoModelWithLMHead, AutoTokenizer
 
 
 class ContextualSpellCheck(object):
-    """Class object for Out Of Vocabulary(OOV) corrections 
+    """Class object for Out Of Vocabulary(OOV) corrections
     """
 
     name = "contextual spellchecker"
 
     def __init__(self, vocab_path="", debug=False, performance=False):
-        """To create an object for this class. It does not require any special 
+        """To create an object for this class. It does not require any special
 
         Args:
             vocab_path (str, optional): Vocabulary file path to be used by the model . Defaults to "".
@@ -27,9 +27,9 @@ class ContextualSpellCheck(object):
             performance (bool, optional): This is used to print the time taken by individual steps in spell check. Defaults to False.
         """
         if (
-            (type(vocab_path) != type(""))
-            or (type(debug) != type(True))
-            or (type(performance) != type(True))
+            not isinstance(vocab_path, str)
+            or not isinstance(debug, bool)
+            or not isinstance(performance, bool)
         ):
             raise TypeError(
                 "Please check datatype provided. vocab_path should be str, debug and performance should be bool"
@@ -61,7 +61,8 @@ class ContextualSpellCheck(object):
                         elif len(extraToken) == 1:
                             words.append(extraToken)
                 if debug:
-                    debugFilePath = os.path.join(currentPath, "tests", "debugFile.txt")
+                    debugFilePath = os.path.join(
+                        currentPath, "tests", "debugFile.txt")
                     with open(debugFilePath, "w+") as newFile:
                         newFile.write("\n".join(words))
                     print("Final vocab at " + debugFilePath)
@@ -99,7 +100,8 @@ class ContextualSpellCheck(object):
             Span.set_extension(
                 "get_has_spellCheck", getter=self.span_require_spellCheck
             )
-            Span.set_extension("score_spellCheck", getter=self.span_score_spellCheck)
+            Span.set_extension("score_spellCheck",
+                               getter=self.span_score_spellCheck)
 
             Token.set_extension(
                 "get_require_spellCheck", getter=self.token_require_spellCheck
@@ -107,7 +109,8 @@ class ContextualSpellCheck(object):
             Token.set_extension(
                 "get_suggestion_spellCheck", getter=self.token_suggestion_spellCheck
             )
-            Token.set_extension("score_spellCheck", getter=self.token_score_spellCheck)
+            Token.set_extension("score_spellCheck",
+                                getter=self.token_score_spellCheck)
 
     def __call__(self, doc):
         """call function for the class. Used in spacy pipeline
@@ -122,14 +125,17 @@ class ContextualSpellCheck(object):
             modelLodaded = datetime.datetime.now()
         misspellTokens, doc = self.misspellIdentify(doc)
         if self.performance:
-            modelLoadTime = self.timeLog("Misspell identification: ", modelLodaded)
+            modelLoadTime = self.timeLog(
+                "Misspell identification: ", modelLodaded)
         if len(misspellTokens) > 0:
             doc, candidate = self.candidateGenerator(doc, misspellTokens)
             if self.performance:
-                modelLoadTime = self.timeLog("candidate Generator: ", modelLodaded)
+                modelLoadTime = self.timeLog(
+                    "candidate Generator: ", modelLodaded)
             answer = self.candidateRanking(doc, candidate)
             if self.performance:
-                modelLoadTime = self.timeLog("candidate ranking: ", modelLodaded)
+                modelLoadTime = self.timeLog(
+                    "candidate ranking: ", modelLodaded)
         return doc
 
     def check(self, query=""):
@@ -212,13 +218,13 @@ class ContextualSpellCheck(object):
         """Returns Candidates for misspell words
 
         This function is responsible for generating candidate list for misspell
-        using BERT. The misspell is masked with a token (eg [MASK]) and the model tries to 
+        using BERT. The misspell is masked with a token (eg [MASK]) and the model tries to
         predict `n` candidates for that mask. The `doc` is used to provide sentence (context) for the mask
 
 
         Arguments:
             doc {`Spacy.Doc`} -- Spacy Doc object, used to provide context to the model
-            misspellings {List(`Spacy.Token`)} -- Contains List of `Token` object types from spacy to preserve meta information of the token 
+            misspellings {List(`Spacy.Token`)} -- Contains List of `Token` object types from spacy to preserve meta information of the token
 
         Keyword Arguments:
             top_n {int} -- # suggestions to be considered (default: {10})
@@ -245,14 +251,17 @@ class ContextualSpellCheck(object):
                     "\nFor", "`" + token.text + "`", "updated query is:\n", updatedQuery
                 )
 
-            model_input = self.BertTokenizer.encode(updatedQuery, return_tensors="pt")
+            model_input = self.BertTokenizer.encode(
+                updatedQuery, return_tensors="pt")
             mask_token_index = torch.where(
                 model_input == self.BertTokenizer.mask_token_id
             )[1]
             token_logits = self.BertModel(model_input)[0]
             mask_token_logits = token_logits[0, mask_token_index, :]
-            token_probability = torch.nn.functional.softmax(mask_token_logits, dim=1)
-            top_n_score, top_n_tokens = torch.topk(token_probability, top_n, dim=1)
+            token_probability = torch.nn.functional.softmax(
+                mask_token_logits, dim=1)
+            top_n_score, top_n_tokens = torch.topk(
+                token_probability, top_n, dim=1)
             top_n_tokens = top_n_tokens[0].tolist()
             top_n_score = top_n_score[0].tolist()
             if self.debug:
@@ -293,15 +302,15 @@ class ContextualSpellCheck(object):
     def candidateRanking(self, doc, misspellingsDict):
         """Ranking the candidates based on edit Distance
 
-        At present using a library to calculate edit distance 
-        between actual word and candidate words. Candidate word 
-        for which edit distance is lowest is selected. If least 
-        edit distance is same then word with higher probability 
+        At present using a library to calculate edit distance
+        between actual word and candidate words. Candidate word
+        for which edit distance is lowest is selected. If least
+        edit distance is same then word with higher probability
         is selected by default
 
         Arguments:
-            misspellingsDict {Dict{`Token`:List[{str}]}} -- 
-            Orginal token is the key and candidate words are the values 
+            misspellingsDict {Dict{`Token`:List[{str}]}} --
+            Orginal token is the key and candidate words are the values
 
         Returns:
             Dict{`Token`:{str}} -- Eg of return type {misspell-1:'BEST-CANDIDATE'}
@@ -310,7 +319,7 @@ class ContextualSpellCheck(object):
         response = {}
         #         doc = self.nlp(query)
         for misspell in misspellingsDict:
-            ## Init least_edit distance
+            # Init least_edit distance
             least_edit_dist = 100
 
             if self.debug:
@@ -323,7 +332,8 @@ class ContextualSpellCheck(object):
                     tempToken = misspell
 
             if self.debug:
-                print("response[" + "`" + str(misspell) + "`" + "]", response[misspell])
+                print("response[" + "`" + str(misspell) +
+                      "`" + "]", response[misspell])
 
         if len(response) > 0:
             doc._.set("suggestions_spellCheck", response)
@@ -332,7 +342,8 @@ class ContextualSpellCheck(object):
                 updatedToken = i.text_with_ws
                 for misspell in response.keys():
                     if i.i == misspell.i:
-                        updatedToken = response[misspell] + misspell.whitespace_
+                        updatedToken = response[misspell] + \
+                            misspell.whitespace_
                         break
                 updatedQuery += updatedToken
             doc._.set("outcome_spellCheck", updatedQuery)
@@ -358,7 +369,7 @@ class ContextualSpellCheck(object):
         return datetime.datetime.now()
 
     def token_require_spellCheck(self, token):
-        """Getter for Token attributes. 
+        """Getter for Token attributes.
 
         Arguments:
             token {`Spacy.Token`} -- Token object for the value should be returned
@@ -374,13 +385,13 @@ class ContextualSpellCheck(object):
         )
 
     def token_suggestion_spellCheck(self, token):
-        """Getter for Token attributes. 
+        """Getter for Token attributes.
 
         Arguments:
             token {`Spacy.Token`} -- Token object for the value should be returned
 
         Returns:
-            List -- If no suggestions: [] else: List['suggestion-1','suggestion-1',...] 
+            List -- If no suggestions: [] else: List['suggestion-1','suggestion-1',...]
         """
         for suggestion in token.doc._.suggestions_spellCheck.keys():
             if token.i == suggestion.i:
@@ -393,13 +404,13 @@ class ContextualSpellCheck(object):
         return ""
 
     def token_score_spellCheck(self, token):
-        """Getter for Token attributes. 
+        """Getter for Token attributes.
 
         Arguments:
             token {`Spacy.Token`} -- Token object for the value should be returned
 
         Returns:
-            List -- If no suggestions: [] else: List[('suggestion-1',score-1), ('suggestion-1',score-2), ...] 
+            List -- If no suggestions: [] else: List[('suggestion-1',score-1), ('suggestion-1',score-2), ...]
         """
         if token.doc._.score_spellCheck is None:
             return []
@@ -420,7 +431,7 @@ class ContextualSpellCheck(object):
             span {`Spacy.Span`} -- Span object for which value should be returned
 
         Returns:
-            Dict(`Token`:List(str,int)) -- for every token it will return (suggestion,score) eg: {token-1: [], token-2: [], token-3: [('suggestion-1', score-1), ...], ...} 
+            Dict(`Token`:List(str,int)) -- for every token it will return (suggestion,score) eg: {token-1: [], token-2: [], token-3: [('suggestion-1', score-1), ...], ...}
         """
         return {token: self.token_score_spellCheck(token) for token in span}
 
@@ -491,7 +502,8 @@ if __name__ == "__main__":
     # for issue #1
     # merge_ents = nlp.create_pipe("merge_entities")
     if "parser" not in nlp.pipe_names:
-        raise AttributeError("parser is required please enable it in nlp pipeline")
+        raise AttributeError(
+            "parser is required please enable it in nlp pipeline")
     checker = ContextualSpellCheck(debug=True)
     nlp.add_pipe(checker)
     # nlp.add_pipe(merge_ents)
