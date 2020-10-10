@@ -138,7 +138,7 @@ dmypy.json
 # uncased_L-4_H-512_A-8/
 
 # research code
-peter's code/
+peters_code/
 *.pptx
 *.ipynb
 contextualSpellCheck/tests/debugFile.txt
