@@ -1,0 +1,8 @@
+[flake8]
+ignore = W503
+exclude = .git,__pycache__,build,peters_code,.ipynb_checkpoints,setup.py
+max-complexity = 15
+per-file-ignores =
+    # imported but unused
+    __init__.py: F401
+max-line-length = 80

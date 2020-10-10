@@ -1,7 +1,8 @@
 import pytest
 import spacy
 from pytest import approx
-import warnings, os
+import warnings
+import os
 
 from ..contextualSpellCheck import ContextualSpellCheck
 
@@ -18,7 +19,8 @@ checker = ContextualSpellCheck()  # instantiate the Person Class
     "inputSentence, misspell",
     [
         (
-            "Income was $9.4 million compared to the prior year of $2.7 million.",
+            "Income was $9.4 million \
+compared to the prior year of $2.7 million.",
             [],
         ),
         ("who is Rajat Goel?", []),
@@ -43,8 +45,8 @@ def test_no_misspellIdentify(inputSentence, misspell):
 def test_type_misspellIdentify(inputSentence, misspell):
     print("Start type correction test for spelling mistake identification\n")
     doc = nlp(inputSentence)
-    assert type(checker.misspell_identify(doc)[0]) == type(misspell)
-    assert type(checker.misspell_identify(doc)[1]) == type(doc)
+    assert isinstance(checker.misspell_identify(doc)[0], type(misspell))
+    assert isinstance(checker.misspell_identify(doc)[1], type(doc))
     assert checker.misspell_identify(doc)[1] == doc
 
 
@@ -62,8 +64,8 @@ def test_identify_misspellIdentify(inputSentence, misspell):
     print("Start misspell word identifation test\n")
     doc = nlp(inputSentence)
     checkerReturn = checker.misspell_identify(doc)[0]
-    assert type(checkerReturn) == list
-    ## Changed the approach after v0.1.0
+    assert isinstance(checkerReturn, list)
+    # Changed the approach after v0.1.0
     assert [tok.text_with_ws for tok in checkerReturn] == [
         doc[i].text_with_ws for i in misspell
     ]
@@ -142,9 +144,9 @@ def test_skipURL_misspellIdentify(inputSentence, misspell):
 def test_type_candidateGenerator(inputSentence, misspell):
     doc = nlp(inputSentence)
     misspell, doc = checker.misspell_identify(doc)
-    assert type(checker.candidate_generator(doc, misspell)) == tuple
-    assert type(checker.candidate_generator(doc, misspell)[0]) == type(doc)
-    assert type(checker.candidate_generator(doc, misspell)[1]) == dict
+    assert isinstance(checker.candidate_generator(doc, misspell), tuple)
+    assert isinstance(checker.candidate_generator(doc, misspell)[0], type(doc))
+    assert isinstance(checker.candidate_generator(doc, misspell)[1], dict)
 
 
 @pytest.mark.parametrize(
@@ -203,7 +205,7 @@ def test_identify_candidateGenerator(inputSentence, misspell):
     doc = nlp(inputSentence)
     (misspellings, doc) = checker.misspell_identify(doc)
     doc, suggestions = checker.candidate_generator(doc, misspellings)
-    ## changed after v1.0 because of deepCopy creatng issue with ==
+    # changed after v1.0 because of deepCopy creatng issue with ==
     # gold_suggestions = {doc[key]: value for key, value in misspell.items()}
     assert [tok.i for tok in suggestions] == [key for key in misspell.keys()]
     assert [suggString for suggString in suggestions.values()] == [
@@ -226,7 +228,7 @@ def test_identify_candidateGenerator(inputSentence, misspell):
 def test_extension_candidateGenerator(inputSentence, misspell):
     doc = nlp(inputSentence)
     (misspellings, doc) = checker.misspell_identify(doc)
-    suggestions = checker.candidate_generator(doc, misspellings)
+    checker.candidate_generator(doc, misspellings)
     assert doc._.performed_spellCheck == misspell
 
 
@@ -321,8 +323,9 @@ def test_ranking_candidateRanking(inputSentence, misspell):
     (misspellings, doc) = checker.misspell_identify(doc)
     doc, suggestions = checker.candidate_generator(doc, misspellings)
     selectedWord = checker.candidate_ranking(doc, suggestions)
-    ## changes made after v0.1
-    # assert selectedWord == {doc[key]: value for key, value in misspell.items()}
+    # changes made after v0.1
+    # assert selectedWord ==
+    # {doc[key]: value for key, value in misspell.items()}
     assert [tok.i for tok in selectedWord.keys()] == [
         tok for tok in misspell.keys()
     ]
@@ -378,8 +381,8 @@ def test_doc_extensions():
             ("%", 0.00041),
         ],
     }
-    assert doc._.contextual_spellCheck == True
-    assert doc._.performed_spellCheck == True
+    assert doc._.contextual_spellCheck
+    assert doc._.performed_spellCheck
     # updated after v0.1
     assert [tok.i for tok in doc._.suggestions_spellCheck.keys()] == [
         tok.i for tok in gold_suggestion.keys()
@@ -422,7 +425,7 @@ def test_doc_extensions():
 def test_span_extensions():
     try:
         nlp.add_pipe(checker)
-    except:
+    except BaseException:
         print("contextual SpellCheck already in pipeline")
     doc = nlp(
         "Income was $9.4 milion compared to the prior year of $2.7 milion."
@@ -446,7 +449,7 @@ def test_span_extensions():
         doc[5]: [],
     }
 
-    assert doc[2:6]._.get_has_spellCheck == True
+    assert doc[2:6]._.get_has_spellCheck
     # splitting components to make use of approx function
     print(doc[2:6]._.score_spellCheck)
     print(gold_score)
@@ -472,7 +475,8 @@ def test_span_extensions():
         abs=1e-4,
     )
 
-    # assert doc[2:6]._.score_spellCheck == approx(gold_score,rel=1e-4, abs=1e-4)
+    # assert doc[2:6]._.score_spellCheck ==
+    # approx(gold_score,rel=1e-4, abs=1e-4)
     nlp.remove_pipe("contextual spellchecker")
 
 
@@ -497,7 +501,7 @@ def test_token_extension():
         ("USD", 0.00113),
     ]
 
-    assert doc[4]._.get_require_spellCheck == True
+    assert doc[4]._.get_require_spellCheck
     assert doc[4]._.get_suggestion_spellCheck == gold_suggestions
     # Match words and score separately to incorporate approx fn in pytest
     assert [word_score[0] for word_score in doc[4]._.score_spellCheck] == [
@@ -525,13 +529,14 @@ def test_warning():
         # warnings.simplefilter("always")
         # Trigger a warning.
 
-        assert doc[4]._.get_require_spellCheck == False
+        assert not doc[4]._.get_require_spellCheck
         assert doc[4]._.get_suggestion_spellCheck == ""
         assert doc[4]._.score_spellCheck == []
         # Verify Warning
         assert issubclass(w[-1].category, UserWarning)
         assert (
-            "Position of tokens modified by downstream element in pipeline eg. merge_entities"
+            "Position of tokens modified by downstream \
+element in pipeline eg. merge_entities"
             in str(w[-1].message)
         )
 
@@ -546,14 +551,16 @@ def test_warning():
             ContextualSpellCheck(vocab_path=True)
             assert (
                 e
-                == "Please check datatype provided. vocab_path should be str, debug and performance should be bool"
+                == "Please check datatype provided. \
+vocab_path should be str, debug and performance should be bool"
             )
         max_edit_distance = "non_int_or_float"
         with pytest.raises(ValueError) as e:
             ContextualSpellCheck(max_edit_dist=max_edit_distance)
             assert (
                 e
-                == f"cannot convert {max_edit_distance} to int. Please provide a valid integer"
+                == f"cannot convert {max_edit_distance} to int. \
+Please provide a valid integer"
             )
 
     try:
@@ -582,8 +589,10 @@ def test_bert_model_name():
     model_name = "a_random_model"
     error_message = (
         f"Can't load config for '{model_name}'. Make sure that:\n\n"
-        f"- '{model_name}' is a correct model identifier listed on 'https://huggingface.co/models'\n\n"
-        f"- or '{model_name}' is the correct path to a directory containing a config.json  file\n\n"
+        f"- '{model_name}' is a correct model identifier listed on \
+'https://huggingface.co/models'\n\n"
+        f"- or '{model_name}' is the correct path to a directory \
+containing a config.json  file\n\n"
     )
 
     with pytest.raises(OSError) as e:
