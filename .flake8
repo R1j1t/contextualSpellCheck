@@ -1,5 +1,5 @@
 [flake8]
-ignore = W503
+ignore = W503, E203
 exclude = .git,__pycache__,build,peters_code,.ipynb_checkpoints,setup.py
 max-complexity = 15
 per-file-ignores =

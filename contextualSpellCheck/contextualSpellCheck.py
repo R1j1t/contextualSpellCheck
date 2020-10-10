@@ -593,14 +593,17 @@ class ContextualSpellCheck(object):
         pre_puct_position = -1
         for char_position in range(text_len):
             if unicodedata.category(text[char_position]).startswith("P"):
-                # print("current_pos is {} and sub_token append {}".format(char_position,text[char_position]))
+                # print("current_pos is {} and sub_token append {}"
+                # .format(char_position,text[char_position]))
                 sub_tokens.append(text[char_position])
-                # print("pre_pos is {}, cur  is {} , pre to current is {}".format(pre_puct_position,char_position,text[pre_puct_position+1:char_position]))
+                # print("pre_pos is {}, cur  is {} , pre to current is {}"
+                # .format(pre_puct_position,char_position,text[pre_puct_position+1:char_position]))
                 if (
                     pre_puct_position >= 0
                     and text[pre_puct_position + 1 : char_position] != ""
                 ):
-                    # print("pre_pos is {}, cur  is {} , pre to current is {}".format(pre_puct_position,char_position,text[pre_puct_position+1:char_position]))
+                    # print("pre_pos is {}, cur  is {} , pre to current is {}"
+                    # .format(pre_puct_position,char_position,text[pre_puct_position+1:char_position]))
                     sub_tokens.append(
                         text[pre_puct_position + 1 : char_position]
                     )
@@ -611,7 +614,8 @@ class ContextualSpellCheck(object):
                 and (char_position + 1 == text_len)
                 and (text[pre_puct_position + 1 :] != "")
             ):
-                # print("inside last token append {}".format(text[pre_puct_position+1:]))
+                # print("inside last token append {}"
+                # .format(text[pre_puct_position+1:]))
                 sub_tokens.append(text[pre_puct_position + 1 :])
 
         if len(sub_tokens) > 0:
