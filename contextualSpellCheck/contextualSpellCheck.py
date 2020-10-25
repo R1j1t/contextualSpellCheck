@@ -620,7 +620,6 @@ class ContextualSpellCheck(object):
 
         if len(sub_tokens) > 0:
             for sub_token in sub_tokens:
-                print(sub_token in self.vocab)
                 if sub_token not in self.vocab:
                     return True
         else:

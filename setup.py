@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="contextualSpellCheck",
-    version="0.3.1",
+    version="0.3.2",
     author="R1j1t",
     author_email="r1j1t@protonmail.com",
     description="Contextual spell correction using BERT (bidirectional representations)",
