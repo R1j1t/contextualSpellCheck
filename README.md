@@ -6,7 +6,7 @@ Contextual word checker for better suggestions
 [![license](https://img.shields.io/github/license/r1j1t/contextualSpellCheck)](https://github.com/R1j1t/contextualSpellCheck/blob/master/LICENSE) 
 [![PyPI](https://img.shields.io/pypi/v/contextualSpellCheck?color=green)](https://pypi.org/project/contextualSpellCheck/) 
 [![Python-Version](https://img.shields.io/badge/Python-3.6+-green)](https://github.com/R1j1t/contextualSpellCheck#install)
-[![Downloads](https://pepy.tech/badge/contextualspellcheck/week)](https://pepy.tech/project/contextualspellcheck/week)
+[![Downloads](https://pepy.tech/badge/contextualspellcheck/week)](https://pepy.tech/project/contextualspellcheck)
 [![GitHub contributors](https://img.shields.io/github/contributors/r1j1t/contextualSpellCheck)](https://github.com/R1j1t/contextualSpellCheck/graphs/contributors)
 [![Help Wanted](https://img.shields.io/badge/Help%20Wanted-Task%20List-violet)](https://github.com/R1j1t/contextualSpellCheck#task-list)
 
@@ -182,8 +182,7 @@ Response:
 ## Task List
 
 - [ ] Add support for Real Word Error (RWE) (Big Task)
-- [x] specify maximum edit distance for `candidateRanking`
-- [x] allow user to specify bert model
+- [ ] Include transformers deTokenizer to get better suggestions
 - [ ] edit distance code optimisation
 - [ ] add multi mask out capability
 - [ ] better candidate generation (maybe by fine tuning the model?)
@@ -191,6 +190,14 @@ Response:
 - [ ] Improve documentation
 - [ ] Add examples for other langauges
 - [ ] use piece wise tokeniser when identifying the misspell
+
+<details><summary>Completed Task</summary>
+<p>
+
+- [x] specify maximum edit distance for `candidateRanking`
+- [x] allow user to specify bert model
+</p>
+</details>
 
 ## Support and contribution
 

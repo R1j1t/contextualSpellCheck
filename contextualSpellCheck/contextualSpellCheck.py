@@ -3,6 +3,7 @@ import logging
 import os
 import warnings
 from datetime import datetime
+import unicodedata
 
 import editdistance
 import spacy
@@ -251,8 +252,8 @@ class ContextualSpellCheck(object):
                 and (token.ent_type_ != "GPE")
                 and (token.ent_type_ != "ORG")
             ):
-                misspell.append(token)
-
+                if self.deep_tokenize_in_vocab(token.text):
+                    misspell.append(token)
         if self.debug:
             print("misspell identified: ", misspell)
         return misspell, doc
@@ -573,6 +574,58 @@ class ContextualSpellCheck(object):
             print("Did you mean: ", update_query)
 
         return update_query
+
+    def deep_tokenize_in_vocab(self, text):
+        """Check if the token contains punctuations
+            if char is punctuation then check in vocab
+            check rest of the word in vocab
+            if both in vocab return False
+
+        Args:
+            text (str): Text to tokenize again for punct
+
+        Returns:
+            Bool: True if both punct and rest of the word
+                 in vocab
+        """
+        text_len = len(text)
+        sub_tokens = []
+        pre_puct_position = -1
+        for char_position in range(text_len):
+            if unicodedata.category(text[char_position]).startswith("P"):
+                # print("current_pos is {} and sub_token append {}"
+                # .format(char_position,text[char_position]))
+                sub_tokens.append(text[char_position])
+                # print("pre_pos is {}, cur  is {} , pre to current is {}"
+                # .format(pre_puct_position,char_position,text[pre_puct_position+1:char_position]))
+                if (
+                    pre_puct_position >= 0
+                    and text[pre_puct_position + 1 : char_position] != ""
+                ):
+                    # print("pre_pos is {}, cur  is {} , pre to current is {}"
+                    # .format(pre_puct_position,char_position,text[pre_puct_position+1:char_position]))
+                    sub_tokens.append(
+                        text[pre_puct_position + 1 : char_position]
+                    )
+                pre_puct_position = char_position
+
+            if (
+                (len(sub_tokens) > 0)
+                and (char_position + 1 == text_len)
+                and (text[pre_puct_position + 1 :] != "")
+            ):
+                # print("inside last token append {}"
+                # .format(text[pre_puct_position+1:]))
+                sub_tokens.append(text[pre_puct_position + 1 :])
+
+        if len(sub_tokens) > 0:
+            for sub_token in sub_tokens:
+                if sub_token not in self.vocab:
+                    return True
+        else:
+            return True
+
+        return False
 
 
 if __name__ == "__main__":
