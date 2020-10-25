@@ -640,3 +640,37 @@ def test_max_edit_dist(max_edit_distance, expected_spell_check_flag):
     assert doc._.outcome_spellCheck == gold_outcome
 
     nlp.remove_pipe("contextual spellchecker")
+
+
+@pytest.mark.parametrize(
+    "input_sentence,expected_outcome,expected_score_doc,\
+expected_suggestion_doc,possible_misspel_index",
+    [
+        (
+            "This is not a pure Python Spell Checking based on Peter Norvig’s \
+blog post on setting up a simple spell checking algorithm.",
+            "",
+            None,
+            {},
+            8,
+        )
+    ],
+)
+def test_deep_tokenization(
+    input_sentence,
+    expected_outcome,
+    expected_score_doc,
+    expected_suggestion_doc,
+    possible_misspel_index,
+):
+    nlp_lg = spacy.load("en_core_web_lg")
+    checker_deep_tokenize = ContextualSpellCheck(max_edit_dist=4)
+    nlp_lg.add_pipe(checker_deep_tokenize)
+    doc = nlp(input_sentence)
+
+    # To check the status of `performed_spell_check` flag
+    assert doc._.outcome_spellCheck == expected_outcome
+    assert doc._.score_spellCheck == expected_score_doc
+    assert doc._.suggestions_spellCheck == expected_suggestion_doc
+
+    assert doc[possible_misspel_index]._.get_suggestion_spellCheck == ""
