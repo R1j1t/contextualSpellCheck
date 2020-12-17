@@ -159,16 +159,30 @@ class ContextualSpellCheck(object):
         """
         if self.performance:
             model_loaded = datetime.now()
-        misspell_tokens, doc = self.misspell_identify(doc)
-        if self.performance:
-            self.time_log("Misspell identification: ", model_loaded)
-        if len(misspell_tokens) > 0:
-            doc, candidate = self.candidate_generator(doc, misspell_tokens)
-            if self.performance:
-                self.time_log("candidate Generator: ", model_loaded)
-            self.candidate_ranking(doc, candidate)
-            if self.performance:
-                self.time_log("candidate ranking: ", model_loaded)
+            misspell_tokens, doc = self.misspell_identify(doc)
+            self.time_log("Misspell Identification took: ", model_loaded)
+            if len(misspell_tokens) > 0:
+                model_loaded = datetime.now()
+                doc, candidate = self.candidate_generator(doc, misspell_tokens)
+                self.time_log("Candidate Generator took: ", model_loaded)
+                model_loaded = datetime.now()
+                self.candidate_ranking(doc, candidate)
+                self.time_log("Candidate Ranking took: ", model_loaded)
+                raw_sentence = doc._.outcome_spellCheck.split(" ")
+                cleaned_sentence = self.BertTokenizer.convert_tokens_to_string(
+                    raw_sentence
+                )
+                doc._.set("outcome_spellCheck", cleaned_sentence)
+        else:
+            misspell_tokens, doc = self.misspell_identify(doc)
+            if len(misspell_tokens) > 0:
+                doc, candidate = self.candidate_generator(doc, misspell_tokens)
+                self.candidate_ranking(doc, candidate)
+                raw_sentence = doc._.outcome_spellCheck.split(" ")
+                cleaned_sentence = self.BertTokenizer.convert_tokens_to_string(
+                    raw_sentence
+                )
+                doc._.set("outcome_spellCheck", cleaned_sentence)
         return doc
 
     def check(self, query="", spacy_model="en_core_web_sm"):
