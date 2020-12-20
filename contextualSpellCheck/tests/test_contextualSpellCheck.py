@@ -643,34 +643,51 @@ def test_max_edit_dist(max_edit_distance, expected_spell_check_flag):
 
 
 @pytest.mark.parametrize(
-    "input_sentence,expected_outcome,expected_score_doc,\
-expected_suggestion_doc,possible_misspel_index",
+    "input_sentence,expected_outcome,\
+expected_suggestion_doc,possible_misspel_index,misspell_suggestion",
     [
         (
             "This is not a pure Python Spell Checking based on Peter Norvig’s \
 blog post on setting up a simple spell checking algorithm.",
             "",
-            None,
             {},
             8,
-        )
+            "",
+        ),
+        (
+            "Everyone has to help to fix the problems of society. \
+There has to be more training, more opportunity to bridge the gap \
+between the haves and the have nots.",
+            "Everyone has to help to fix the problems of society. \
+There has to be more training, more opportunity to bridge the gap \
+between the have and the havets.",
+            {"haves": "have", "nots": "##ts"},
+            31,
+            "",
+        ),
     ],
 )
-def test_deep_tokenization(
+def test_doc_extensions_bug(
     input_sentence,
     expected_outcome,
-    expected_score_doc,
     expected_suggestion_doc,
     possible_misspel_index,
+    misspell_suggestion,
 ):
     nlp_lg = spacy.load("en_core_web_lg")
-    checker_deep_tokenize = ContextualSpellCheck(max_edit_dist=4)
+    checker_deep_tokenize = ContextualSpellCheck(max_edit_dist=3)
     nlp_lg.add_pipe(checker_deep_tokenize)
-    doc = nlp(input_sentence)
+    doc = nlp_lg(input_sentence)
 
     # To check the status of `performed_spell_check` flag
     assert doc._.outcome_spellCheck == expected_outcome
-    assert doc._.score_spellCheck == expected_score_doc
-    assert doc._.suggestions_spellCheck == expected_suggestion_doc
-
-    assert doc[possible_misspel_index]._.get_suggestion_spellCheck == ""
+    assert [tok.text for tok in doc._.suggestions_spellCheck.keys()] == [
+        tok for tok in expected_suggestion_doc.keys()
+    ]
+    assert [
+        tokString for tokString in doc._.suggestions_spellCheck.values()
+    ] == [tokString for tokString in expected_suggestion_doc.values()]
+    assert (
+        doc[possible_misspel_index]._.get_suggestion_spellCheck
+        == misspell_suggestion
+    )

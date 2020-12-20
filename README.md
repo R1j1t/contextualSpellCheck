@@ -190,6 +190,8 @@ Response:
 - [ ] Improve documentation
 - [ ] Add examples for other langauges
 - [ ] use piece wise tokeniser when identifying the misspell
+- [ ] Improve logging in code
+- [ ] Update the logic of misspell identification (OOV) (#30)
 
 <details><summary>Completed Task</summary>
 <p>
