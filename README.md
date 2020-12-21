@@ -182,7 +182,6 @@ Response:
 ## Task List
 
 - [ ] Add support for Real Word Error (RWE) (Big Task)
-- [ ] Include transformers deTokenizer to get better suggestions
 - [ ] edit distance code optimisation
 - [ ] add multi mask out capability
 - [ ] better candidate generation (maybe by fine tuning the model?)
@@ -198,6 +197,8 @@ Response:
 
 - [x] specify maximum edit distance for `candidateRanking`
 - [x] allow user to specify bert model
+- [x] Include transformers deTokenizer to get better suggestions
+
 </p>
 </details>
 
