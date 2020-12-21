@@ -181,16 +181,17 @@ Response:
 
 ## Task List
 
-- [ ] Add support for Real Word Error (RWE) (Big Task)
-- [ ] edit distance code optimisation
-- [ ] add multi mask out capability
-- [ ] better candidate generation (maybe by fine tuning the model?)
+- [ ] dependency version in setup.py ([#38](https://github.com/R1j1t/contextualSpellCheck/issues/38))
+- [ ] use cython for part of the code to improve performance ([#39](https://github.com/R1j1t/contextualSpellCheck/issues/41))
+- [ ] Improve metric for candidate selection ([#40](https://github.com/R1j1t/contextualSpellCheck/issues/40))
+- [ ] Add examples for other langauges ([#41](https://github.com/R1j1t/contextualSpellCheck/issues/41))
+- [ ] Update the logic of misspell identification (OOV) ([#44](https://github.com/R1j1t/contextualSpellCheck/issues/44))
+- [ ] better candidate generation (solved by [#44]?)
 - [ ] add metric by testing on datasets
 - [ ] Improve documentation
-- [ ] Add examples for other langauges
-- [ ] use piece wise tokeniser when identifying the misspell
 - [ ] Improve logging in code
-- [ ] Update the logic of misspell identification (OOV) (#30)
+- [ ] Add support for Real Word Error (RWE) (Big Task)
+- [ ] add multi mask out capability
 
 <details><summary>Completed Task</summary>
 <p>
