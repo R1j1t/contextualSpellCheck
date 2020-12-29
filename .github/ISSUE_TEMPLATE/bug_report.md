@@ -20,7 +20,7 @@ A clear and concise description of what the bug is.
 ```
 
 **Expected behavior**
-A clear and concise description of what you expected to happen.
+What was expected?
 
 **Version (please complete the following information):**
  - contextualSpellCheck [e.g. 0.3.0]
