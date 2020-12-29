@@ -186,7 +186,7 @@ Response:
 - [ ] Improve metric for candidate selection ([#40](https://github.com/R1j1t/contextualSpellCheck/issues/40))
 - [ ] Add examples for other langauges ([#41](https://github.com/R1j1t/contextualSpellCheck/issues/41))
 - [ ] Update the logic of misspell identification (OOV) ([#44](https://github.com/R1j1t/contextualSpellCheck/issues/44))
-- [ ] better candidate generation (solved by [#44]?)
+- [ ] better candidate generation (solved by [#44](https://github.com/R1j1t/contextualSpellCheck/issues/44)?)
 - [ ] add metric by testing on datasets
 - [ ] Improve documentation
 - [ ] Improve logging in code
@@ -211,13 +211,14 @@ If you like the project, please ⭑ the project and show your support! Also, if 
 
 Below are some of the projects/work I referred to while developing this package
 
-1. Spacy Documentation and [custom attributes](https://course.spacy.io/en/chapter3)
-2. [HuggingFace's Transformers](https://github.com/huggingface/transformers)
-3. [Norvig's Blog](http://norvig.com/spell-correct.html)
-4. Bert Paper: https://arxiv.org/abs/1810.04805
-5. Denoising words: https://arxiv.org/pdf/1910.14080.pdf
-6. CONTEXT BASED SPELLING CORRECTION (1990)
-7. [How Difficult is it to Develop a Perfect Spell-checker? A Cross-linguistic Analysis through Complex Network Approach](http://citeseerx.ist.psu.edu/viewdoc/download;?doi=10.1.1.146.4390&rep=rep1&type=pdf)
-8. [HuggingFace's neuralcoref](https://github.com/huggingface/neuralcoref) for package design and some of the functions are inspired from them (like add_to_pipe which is an amazing idea!)
+1. Explosion AI.Architecture. May 2020. url:https://spacy.io/api.
+2. Monojit Choudhury et al. “How difficult is it to develop a perfect spell-checker? A cross-linguistic analysis through complex network approach”. In:arXiv preprint physics/0703198(2007).
+3. Jacob Devlin et al. BERT: Pre-training of Deep Bidirectional Transform-ers for Language Understanding. 2019. arXiv:1810.04805 [cs.CL].
+4. Hugging  Face.Fast Coreference Resolution in spaCy with Neural Net-works. May 2020. url:https://github.com/huggingface/neuralcoref.
+5. Ines.Chapter 3: Processing Pipelines. May 20202. url:https://course.spacy.io/en/chapter3.
+6. Eric Mays, Fred J Damerau, and Robert L Mercer. “Context based spellingcorrection”. In:Information Processing & Management27.5 (1991), pp. 517–522.
+7. Peter Norvig. How to Write a Spelling Corrector. May 2020. url:http://norvig.com/spell-correct.html.
+8. Yifu  Sun  and  Haoming  Jiang.Contextual Text Denoising with MaskedLanguage Models. 2019. arXiv:1910.14080 [cs.CL].
+9. Thomas  Wolf  et  al.  “Transformers:  State-of-the-Art  Natural  LanguageProcessing”. In:Proceedings of the 2020 Conference on Empirical Methodsin Natural Language Processing: System Demonstrations. Online: Associ-ation for Computational Linguistics, Oct. 2020, pp. 38–45. url:https://www.aclweb.org/anthology/2020.emnlp-demos.6.
 
 [1]: <http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=52A3B869596656C9DA285DCE83A0339F?doi=10.1.1.146.4390&rep=rep1&type=pdf>
