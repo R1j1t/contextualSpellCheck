@@ -14,7 +14,7 @@ from transformers import AutoModelForMaskedLM, AutoTokenizer
 from spacy.language import Language
 
 
-@Language.factory("contextual_spellchecker")
+@Language.factory("contextual spellchecker")
 class ContextualSpellCheck(object):
     """
     Class object for Out Of Vocabulary(OOV) corrections
@@ -655,8 +655,10 @@ if __name__ == "__main__":
         raise AttributeError(
             "parser is required please enable it in nlp pipeline"
         )
-#    checker = ContextualSpellCheck(debug=True, max_edit_dist=3)
-    nlp.add_pipe("contextual_spellchecker", config={'debug':True, 'max_edit_dist':3})
+    #    checker = ContextualSpellCheck(debug=True, max_edit_dist=3)
+    nlp.add_pipe(
+        "contextual_spellchecker", config={"debug": True, "max_edit_dist": 3}
+    )
 
     # nlp.add_pipe(merge_ents)
 
