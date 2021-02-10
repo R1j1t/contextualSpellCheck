@@ -1,5 +1,5 @@
 Flask
-spacy<3.0.0
+spacy>=3.0.0
 editdistance
 pytest
 torch
