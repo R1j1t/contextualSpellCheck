@@ -655,8 +655,9 @@ if __name__ == "__main__":
         raise AttributeError(
             "parser is required please enable it in nlp pipeline"
         )
-    checker = ContextualSpellCheck(debug=True, max_edit_dist=3)
-    nlp.add_pipe(checker)
+#    checker = ContextualSpellCheck(debug=True, max_edit_dist=3)
+    nlp.add_pipe("contextual_spellchecker", config={'debug':True, 'max_edit_dist':3})
+
     # nlp.add_pipe(merge_ents)
 
     doc = nlp(
