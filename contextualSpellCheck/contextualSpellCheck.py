@@ -26,11 +26,11 @@ class ContextualSpellCheck(object):
         self,
         nlp,
         name,
-        vocab_path="",
-        model_name="bert-base-cased",
-        max_edit_dist=10,
-        debug=False,
-        performance=False,
+        vocab_path: str = "",
+        model_name: str = "bert-base-cased",
+        max_edit_dist: int = 10,
+        debug: bool = False,
+        performance: bool = False,
     ):
         """To create an object for this class. It does not require any special
 
@@ -47,27 +47,14 @@ class ContextualSpellCheck(object):
                                           by individual steps in spell check.
                                           Defaults to False.
         """
-        if (
-            not isinstance(vocab_path, str)
-            or not isinstance(debug, type(True))
-            or not isinstance(performance, type(True))
-        ):
-            raise TypeError(
-                "Please check datatype provided. vocab_path should be str,"
-                " debug and performance should be bool"
-            )
-        try:
-            int(float(max_edit_dist))
-        except ValueError:
-            raise ValueError(
-                f"cannot convert {max_edit_dist} to int. Please provide a "
-                f"valid integer "
-            )
 
         if vocab_path != "":
+            vocab_path = str(vocab_path)
             try:
                 # First open() for user specified word addition to vocab
                 with open(vocab_path, encoding="utf8") as f:
+                    print(vocab_path)
+                    print("inside vocab path")
                     # if want to remove '[unusedXX]' from vocab
                     # words = [
                     #     line.rstrip()
@@ -79,12 +66,14 @@ class ContextualSpellCheck(object):
                 # The below code adds the necessary words like numbers
                 # /punctuations/tokenizer specific words like [PAD]/[
                 # unused0]/##M
+                print("file opened!")
                 current_path = os.path.dirname(__file__)
                 vocab_path = os.path.join(current_path, "data", "vocab.txt")
                 extra_token = ["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]"]
                 words.extend(extra_token)
 
                 with open(vocab_path, encoding="utf8") as f:
+                    print("Inside [unused....]")
                     # if want to remove '[unusedXX]' from vocab
                     # words = [
                     #     line.rstrip()

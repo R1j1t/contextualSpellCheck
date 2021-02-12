@@ -550,25 +550,21 @@ element in pipeline eg. merge_entities"
         print(nlp.pipe_names)
         # warnings.simplefilter("default")
 
-        with pytest.raises(TypeError) as e:
-            nlp = spacy.load("en_core_web_sm")
-            ContextualSpellCheck(nlp, "contextualSpellCheck", vocab_path=True)
-            assert (
-                e
-                == "Please check datatype provided. \
-vocab_path should be str, debug and performance should be bool"
-            )
-        max_edit_distance = "non_int_or_float"
-        with pytest.raises(ValueError) as e:
-            nlp = spacy.load("en_core_web_sm")
-            ContextualSpellCheck(
-                nlp, "contextualSpellCheck", max_edit_dist=max_edit_distance
-            )
-            assert (
-                e
-                == f"cannot convert {max_edit_distance} to int. \
-Please provide a valid integer"
-            )
+    with warnings.catch_warnings(record=True) as w:
+        nlp = spacy.load("en_core_web_sm")
+        ContextualSpellCheck(nlp, "contextualSpellCheck", vocab_path=True)
+
+        assert len(w) == 1
+        assert "Using default vocab" in w[0].message.args[0]
+
+    max_edit_distance = "non_int_or_float"
+    with pytest.raises(ValueError) as e:
+        nlp = spacy.load("en_core_web_sm")
+        ContextualSpellCheck(
+            nlp, "contextualSpellCheck", max_edit_dist=max_edit_distance
+        )
+        nlp("Income was $9.4 million")
+    assert e.type is ValueError
 
     try:
         nlp = spacy.load("en_core_web_sm")
@@ -694,7 +690,8 @@ def test_doc_extensions_bug(
     misspell_suggestion,
 ):
     nlp_lg = spacy.load("en_core_web_lg")
-    # checker_deep_tokenize = ContextualSpellCheck(nlp,"contextualSpellCheck",max_edit_dist=3)
+    # checker_deep_tokenize =
+    # ContextualSpellCheck(nlp,"contextualSpellCheck",max_edit_dist=3)
     nlp_lg.add_pipe("contextual spellchecker", config={"max_edit_dist": 3})
     doc = nlp_lg(input_sentence)
 
