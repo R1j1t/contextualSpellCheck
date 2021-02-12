@@ -11,8 +11,10 @@ import torch
 from spacy.tokens import Doc, Token, Span
 from spacy.vocab import Vocab
 from transformers import AutoModelForMaskedLM, AutoTokenizer
+from spacy.language import Language
 
 
+@Language.factory("contextual spellchecker")
 class ContextualSpellCheck(object):
     """
     Class object for Out Of Vocabulary(OOV) corrections
@@ -22,6 +24,8 @@ class ContextualSpellCheck(object):
 
     def __init__(
         self,
+        nlp,
+        name,
         vocab_path="",
         model_name="bert-base-cased",
         max_edit_dist=10,
@@ -651,8 +655,11 @@ if __name__ == "__main__":
         raise AttributeError(
             "parser is required please enable it in nlp pipeline"
         )
-    checker = ContextualSpellCheck(debug=True, max_edit_dist=3)
-    nlp.add_pipe(checker)
+    #    checker = ContextualSpellCheck(debug=True, max_edit_dist=3)
+    nlp.add_pipe(
+        "contextual_spellchecker", config={"debug": True, "max_edit_dist": 3}
+    )
+
     # nlp.add_pipe(merge_ents)
 
     doc = nlp(
