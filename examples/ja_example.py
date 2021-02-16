@@ -1,12 +1,15 @@
 import spacy
-from contextualSpellCheck import ContextualSpellCheck
+import contextualSpellCheck
 
 nlp = spacy.load("ja_core_news_sm")
-checker = ContextualSpellCheck(
-    model_name="cl-tohoku/bert-base-japanese-whole-word-masking",
-    max_edit_dist=2,
+
+nlp.add_pipe(
+    "contextual spellchecker",
+    config={
+        "model_name": "cl-tohoku/bert-base-japanese-whole-word-masking",
+        "max_edit_dist": 2,
+    },
 )
-nlp.add_pipe(checker)
 
 doc = nlp("しかし大勢においては、ここような事故はウィキペディアの拡大には影響を及ぼしていない。")
 print(doc._.performed_spellCheck)

@@ -103,7 +103,7 @@ class ContextualSpellCheck(object):
                 words = []
 
         self.max_edit_dist = int(float(max_edit_dist))
-        self.model_name = model_name
+        self.model_name = str(model_name)
         self.BertTokenizer = AutoTokenizer.from_pretrained(self.model_name)
 
         if vocab_path == "":
@@ -646,7 +646,7 @@ if __name__ == "__main__":
         )
     #    checker = ContextualSpellCheck(debug=True, max_edit_dist=3)
     nlp.add_pipe(
-        "contextual_spellchecker", config={"debug": True, "max_edit_dist": 3}
+        "contextual spellchecker", config={"debug": True, "max_edit_dist": 3}
     )
 
     # nlp.add_pipe(merge_ents)

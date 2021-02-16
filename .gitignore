@@ -145,3 +145,6 @@ contextualSpellCheck/tests/debugFile.txt
 
 # vs code ignore
 .vscode/
+
+# PyCharm config ignore
+.idea/
