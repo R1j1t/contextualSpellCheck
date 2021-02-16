@@ -12,7 +12,9 @@ from ..contextualSpellCheck import ContextualSpellCheck
 
 nlp = spacy.load("en_core_web_sm")
 
-checker = ContextualSpellCheck()  # instantiate the Person Class
+checker = ContextualSpellCheck(
+    nlp, "contextual spellchecker"
+)  # instantiate the Person Class
 
 
 @pytest.mark.parametrize(
@@ -335,7 +337,7 @@ def test_ranking_candidateRanking(inputSentence, misspell):
 
 
 def test_compatible_spacyPipeline():
-    nlp.add_pipe(checker)
+    nlp.add_pipe("contextual spellchecker")
     assert "contextual spellchecker" in nlp.pipe_names
 
     nlp.remove_pipe("contextual spellchecker")
@@ -343,7 +345,7 @@ def test_compatible_spacyPipeline():
 
 
 def test_doc_extensions():
-    nlp.add_pipe(checker)
+    nlp.add_pipe("contextual spellchecker")
     doc = nlp(
         "Income was $9.4 milion compared to the prior year of $2.7 milion."
     )
@@ -424,7 +426,7 @@ def test_doc_extensions():
 
 def test_span_extensions():
     try:
-        nlp.add_pipe(checker)
+        nlp.add_pipe("contextual spellchecker")
     except BaseException:
         print("contextual SpellCheck already in pipeline")
     doc = nlp(
@@ -482,7 +484,7 @@ def test_span_extensions():
 
 def test_token_extension():
     if "contextual spellchecker" not in nlp.pipe_names:
-        nlp.add_pipe(checker)
+        nlp.add_pipe("contextual spellchecker")
     doc = nlp(
         "Income was $9.4 milion compared to the prior year of $2.7 milion."
     )
@@ -516,10 +518,11 @@ def test_token_extension():
 
 
 def test_warning():
+    nlp = spacy.load("en_core_web_sm")
     if "contextual spellchecker" not in nlp.pipe_names:
-        nlp.add_pipe(checker)
-    merge_ents = nlp.create_pipe("merge_entities")
-    nlp.add_pipe(merge_ents)
+        nlp.add_pipe("contextual spellchecker")
+    # merge_ents = nlp.create_pipe("merge_entities")
+    nlp.add_pipe("merge_entities")
     doc = nlp(
         "Income was $9.4 milion compared to the prior year of $2.7 milion."
     )
@@ -547,31 +550,35 @@ element in pipeline eg. merge_entities"
         print(nlp.pipe_names)
         # warnings.simplefilter("default")
 
-        with pytest.raises(TypeError) as e:
-            ContextualSpellCheck(vocab_path=True)
-            assert (
-                e
-                == "Please check datatype provided. \
-vocab_path should be str, debug and performance should be bool"
-            )
-        max_edit_distance = "non_int_or_float"
-        with pytest.raises(ValueError) as e:
-            ContextualSpellCheck(max_edit_dist=max_edit_distance)
-            assert (
-                e
-                == f"cannot convert {max_edit_distance} to int. \
-Please provide a valid integer"
-            )
+    with warnings.catch_warnings(record=True) as w:
+        nlp = spacy.load("en_core_web_sm")
+        ContextualSpellCheck(nlp, "contextualSpellCheck", vocab_path=True)
+
+        assert len(w) == 1
+        assert "Using default vocab" in w[0].message.args[0]
+
+    max_edit_distance = "non_int_or_float"
+    with pytest.raises(ValueError) as e:
+        nlp = spacy.load("en_core_web_sm")
+        ContextualSpellCheck(
+            nlp, "contextualSpellCheck", max_edit_dist=max_edit_distance
+        )
+        nlp("Income was $9.4 million")
+    assert e.type is ValueError
 
     try:
-        ContextualSpellCheck(max_edit_dist="3.1")
+        nlp = spacy.load("en_core_web_sm")
+        ContextualSpellCheck(nlp, "contextualSpellCheck", max_edit_dist="3.1")
     except Exception as uncatched_error:
         pytest.fail(str(uncatched_error))
 
 
 def test_vocab_file():
     with warnings.catch_warnings(record=True) as w:
-        ContextualSpellCheck(vocab_path="testing.txt")
+        nlp = spacy.load("en_core_web_sm")
+        ContextualSpellCheck(
+            nlp, "contextualSpellCheck", vocab_path="testing.txt"
+        )
         assert any([issubclass(i.category, UserWarning) for i in w])
         assert any(["Using default vocab" in str(i.message) for i in w])
     currentPath = os.path.dirname(__file__)
@@ -579,7 +586,10 @@ def test_vocab_file():
     orgDebugFilePath = os.path.join(currentPath, "originaldebugFile.txt")
     testVocab = os.path.join(currentPath, "testVocab.txt")
     print(testVocab, currentPath, debugPathFile)
-    ContextualSpellCheck(vocab_path=testVocab, debug=True)
+    nlp = spacy.load("en_core_web_sm")
+    ContextualSpellCheck(
+        nlp, "contextualSpellCheck", vocab_path=testVocab, debug=True
+    )
     with open(orgDebugFilePath) as f1:
         with open(debugPathFile) as f2:
             assert f1.read() == f2.read()
@@ -596,14 +606,16 @@ containing a config.json  file\n\n"
     )
 
     with pytest.raises(OSError) as e:
-        ContextualSpellCheck(model_name=model_name)
+        nlp = spacy.load("en_core_web_sm")
+        ContextualSpellCheck(nlp, "contextualSpellCheck", model_name=model_name)
         assert e == error_message
 
 
 def test_correct_model_name():
     model_name = "TurkuNLP/bert-base-finnish-cased-v1"
     try:
-        ContextualSpellCheck(model_name=model_name)
+        nlp = spacy.load("en_core_web_sm")
+        ContextualSpellCheck(nlp, "contextualSpellCheck", model_name=model_name)
     except OSError:
         pytest.fail("Specificed model is not present in transformers")
     except Exception as uncatched_error:
@@ -615,10 +627,13 @@ def test_correct_model_name():
     [(0, False), (1, False), (2, True), (3, True)],
 )
 def test_max_edit_dist(max_edit_distance, expected_spell_check_flag):
+    nlp = spacy.load("en_core_web_sm")
     if "contextual spellchecker" in nlp.pipe_names:
         nlp.remove_pipe("contextual spellchecker")
-    checker_edit_dist = ContextualSpellCheck(max_edit_dist=max_edit_distance)
-    nlp.add_pipe(checker_edit_dist)
+    # checker_edit_dist = ContextualSpellCheck(max_edit_dist=max_edit_distance)
+    nlp.add_pipe(
+        "contextual spellchecker", config={"max_edit_dist": max_edit_distance}
+    )
     doc = nlp(
         "Income was $9.4 milion compared to the prior year of $2.7 milion."
     )
@@ -675,8 +690,9 @@ def test_doc_extensions_bug(
     misspell_suggestion,
 ):
     nlp_lg = spacy.load("en_core_web_lg")
-    checker_deep_tokenize = ContextualSpellCheck(max_edit_dist=3)
-    nlp_lg.add_pipe(checker_deep_tokenize)
+    # checker_deep_tokenize =
+    # ContextualSpellCheck(nlp,"contextualSpellCheck",max_edit_dist=3)
+    nlp_lg.add_pipe("contextual spellchecker", config={"max_edit_dist": 3})
     doc = nlp_lg(input_sentence)
 
     # To check the status of `performed_spell_check` flag

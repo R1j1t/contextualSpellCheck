@@ -12,13 +12,13 @@ Contextual word checker for better suggestions
 
 ## Types of spelling mistakes
 
-It is essential to understand that identifying whether a candidate is a spelling error is a big task. You can see the below quote from a research paper:
+It is essential to understand that identifying whether a candidate is a spelling error is a big task.
 
 > Spelling errors are broadly classified as non- word errors (NWE) and real word errors (RWE). If the misspelt string is a valid word in the language, then it is called an RWE, else it is an NWE.
 >
 > -- [Monojit Choudhury et. al. (2007)][1]
 
-This package currently focuses on Out of Vocabulary (OOV) word or non-word error (NWE) correction using BERT model. The idea of using BERT was to use the context when correcting OOV. In the coming days, I would like to focus on RWE and optimising the package by implementing it in cython.
+This package currently focuses on Out of Vocabulary (OOV) word or non-word error (NWE) correction using BERT model. The idea of using BERT was to use the context when correcting OOV. To improve this package, I would like to extend the functionality to identify RWE, optimising the package, and improving the documentation.
 
 ## Install
 
@@ -28,26 +28,24 @@ The package can be installed using [pip](https://pypi.org/project/contextualSpel
 pip install contextualSpellCheck
 ```
 
-Also, please install the dependencies from requirements.txt
-
 ## Usage
 
-**Note:** For other language examples check [`examples`](https://github.com/R1j1t/contextualSpellCheck/tree/master/examples) folder. 
+**Note:** For use in other languages check [`examples`](https://github.com/R1j1t/contextualSpellCheck/tree/master/examples) folder.
 
 ### How to load the package in spacy pipeline
 
 ```bash
 >>> import contextualSpellCheck
 >>> import spacy
->>> 
->>> ## We require NER to identify if it is PERSON
->>> ## also require parser because we use Token.sent for context
 >>> nlp = spacy.load("en_core_web_sm") 
 >>> 
->>> contextualSpellCheck.add_to_pipe(nlp)
-<spacy.lang.en.English object at 0x12839a2d0>
+>>> ## We require NER to identify if a token is a PERSON
+>>> ## also require parser because we use `Token.sent` for context
 >>> nlp.pipe_names
-['tagger', 'parser', 'ner', 'contextual spellchecker']
+['tok2vec', 'tagger', 'parser', 'ner', 'attribute_ruler', 'lemmatizer']
+>>> contextualSpellCheck.add_to_pipe(nlp)
+>>> nlp.pipe_names
+['tok2vec', 'tagger', 'parser', 'ner', 'attribute_ruler', 'lemmatizer', 'contextual spellchecker']
 >>> 
 >>> doc = nlp('Income was $9.4 milion compared to the prior year of $2.7 milion.')
 >>> doc._.outcome_spellCheck
@@ -60,19 +58,24 @@ Or you can add to spaCy pipeline manually!
 >>> import spacy
 >>> import contextualSpellCheck
 >>> 
->>> nlp = spacy.load('en')
->>> checker = contextualSpellCheck.contextualSpellCheck.ContextualSpellCheck()
->>> nlp.add_pipe(checker)
+>>> nlp = spacy.load("en_core_web_sm")
+>>> nlp.pipe_names
+['tok2vec', 'tagger', 'parser', 'ner', 'attribute_ruler', 'lemmatizer']
+>>> # You can pass the optional parameters to the contextualSpellCheck
+>>> # eg. pass max edit distance use config={"max_edit_dist": 3}
+>>> nlp.add_pipe("contextual spellchecker")
+<contextualSpellCheck.contextualSpellCheck.ContextualSpellCheck object at 0x1049f82b0>
+>>> nlp.pipe_names
+['tok2vec', 'tagger', 'parser', 'ner', 'attribute_ruler', 'lemmatizer', 'contextual spellchecker']
 >>> 
 >>> doc = nlp("Income was $9.4 milion compared to the prior year of $2.7 milion.")
 >>> print(doc._.performed_spellCheck)
 True
 >>> print(doc._.outcome_spellCheck)
 Income was $9.4 million compared to the prior year of $2.7 million.
-
 ```
 
-After adding contextual spell checker in the pipeline, you use the pipeline normally. The spell check suggestions and other data can be accessed using extensions.
+After adding `contextual spellchecker` in the pipeline, you use the pipeline normally. The spell check suggestions and other data can be accessed using [extensions](#Extensions).
 
 ### Using the pipeline
 
@@ -108,7 +111,7 @@ True
 
 ## Extensions
 
-To make the usage simpler spacy provides custom extensions which a library can use. This makes it easier for the user to get the desired data. contextualSpellCheck provides extensions on the `doc`, `span` and `token` level. Below tables summaries the extensions.
+To make the usage easy, `contextual spellchecker` provides custom spacy extensions which your code can consume. This makes it easier for the user to get the desired data. contextualSpellCheck provides extensions on the `doc`, `span` and `token` level. Below tables summaries the extensions.
 
 ### `spaCy.Doc` level extensions
 
@@ -142,7 +145,7 @@ Query: You can use the endpoint http://127.0.0.1:5000/?query=YOUR-QUERY
 Note: Your browser can handle the text encoding
 
 ```
-http://localhost:5000/?query=Income%20was%20$9.4%20milion%20compared%20to%20the%20prior%20year%20of%20$2.7%20milion.
+GET Request: http://localhost:5000/?query=Income%20was%20$9.4%20milion%20compared%20to%20the%20prior%20year%20of%20$2.7%20milion.
 ```
 
 Response:

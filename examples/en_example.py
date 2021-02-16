@@ -1,9 +1,9 @@
 import spacy
-from contextualSpellCheck import ContextualSpellCheck
+import contextualSpellCheck
 
 nlp = spacy.load("en_core_web_sm")
-checker = ContextualSpellCheck(max_edit_dist=100)
-nlp.add_pipe(checker)
+
+nlp.add_pipe("contextual spellchecker", config={"max_edit_dist": 100})
 
 doc = nlp("Income was $9.4 milion compared to the prior year of $2.7 milion.")
 print(doc._.performed_spellCheck)
