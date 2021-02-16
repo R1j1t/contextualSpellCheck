@@ -63,7 +63,7 @@ Or you can add to spaCy pipeline manually!
 ['tok2vec', 'tagger', 'parser', 'ner', 'attribute_ruler', 'lemmatizer']
 >>> # You can pass the optional parameters to the contextualSpellCheck
 >>> # eg. pass max edit distance use config={"max_edit_dist": 3}
->>> nlp.add_pipe("contextual spellchecker", config={"max_edit_dist": 3})
+>>> nlp.add_pipe("contextual spellchecker")
 <contextualSpellCheck.contextualSpellCheck.ContextualSpellCheck object at 0x1049f82b0>
 >>> nlp.pipe_names
 ['tok2vec', 'tagger', 'parser', 'ner', 'attribute_ruler', 'lemmatizer', 'contextual spellchecker']
