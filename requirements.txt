@@ -2,6 +2,7 @@ Flask
 spacy>=3.0.0
 editdistance
 pytest
+--find-links https://download.pytorch.org/whl/torch_stable.html
 torch
 transformers
 
