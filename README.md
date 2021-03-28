@@ -9,6 +9,7 @@ Contextual word checker for better suggestions
 [![Downloads](https://pepy.tech/badge/contextualspellcheck/week)](https://pepy.tech/project/contextualspellcheck)
 [![GitHub contributors](https://img.shields.io/github/contributors/r1j1t/contextualSpellCheck)](https://github.com/R1j1t/contextualSpellCheck/graphs/contributors)
 [![Help Wanted](https://img.shields.io/badge/Help%20Wanted-Task%20List-violet)](https://github.com/R1j1t/contextualSpellCheck#task-list)
+[![DOI](https://zenodo.org/badge/254703118.svg)](https://zenodo.org/badge/latestdoi/254703118)
 
 ## Types of spelling mistakes
 
@@ -209,6 +210,22 @@ Response:
 ## Support and contribution
 
 If you like the project, please ⭑ the project and show your support! Also, if you feel, the current behaviour is not as expected, please feel free to raise an [issue](https://github.com/R1j1t/contextualSpellCheck/issues). If you can help with any of the above tasks, please open a [PR](https://github.com/R1j1t/contextualSpellCheck/pulls) with necessary changes to documentation and tests.
+
+## Cite
+
+If you are using contextualSpellCheck in your academic work, please consider citing the library using the below BibTex entry:
+
+```bibtex
+@software{contextualSpellCheck_2021,
+  author       = {Rajat Goel},
+  title        = {contextualSpellCheck},
+  month        = mar,
+  year         = 2021,
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.4642379},
+  url          = {https://doi.org/10.5281/zenodo.4642379}
+}
+```
 
 ## Reference
 
