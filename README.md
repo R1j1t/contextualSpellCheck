@@ -211,6 +211,21 @@ Response:
 
 If you like the project, please ⭑ the project and show your support! Also, if you feel, the current behaviour is not as expected, please feel free to raise an [issue](https://github.com/R1j1t/contextualSpellCheck/issues). If you can help with any of the above tasks, please open a [PR](https://github.com/R1j1t/contextualSpellCheck/pulls) with necessary changes to documentation and tests.
 
+## Cite
+
+```
+@software{rajat_goel_2021_4642380,
+  author       = {Rajat Goel},
+  title        = {contextualSpellCheck},
+  month        = mar,
+  year         = 2021,
+  publisher    = {Zenodo},
+  version      = {v0.4.1},
+  doi          = {10.5281/zenodo.4642380},
+  url          = {https://doi.org/10.5281/zenodo.4642380}
+}
+```
+
 ## Reference
 
 Below are some of the projects/work I referred to while developing this package
