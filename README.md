@@ -213,6 +213,8 @@ If you like the project, please ⭑ the project and show your support! Also, if 
 
 ## Cite
 
+If you are using this project in your academic work please consider citing using below BibTex:
+
 ```
 @software{rajat_goel_2021_4642380,
   author       = {Rajat Goel},
@@ -220,9 +222,8 @@ If you like the project, please ⭑ the project and show your support! Also, if 
   month        = mar,
   year         = 2021,
   publisher    = {Zenodo},
-  version      = {v0.4.1},
-  doi          = {10.5281/zenodo.4642380},
-  url          = {https://doi.org/10.5281/zenodo.4642380}
+  doi          = {10.5281/zenodo.4642379},
+  url          = {https://doi.org/10.5281/zenodo.4642379}
 }
 ```
 
