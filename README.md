@@ -9,6 +9,7 @@ Contextual word checker for better suggestions
 [![Downloads](https://pepy.tech/badge/contextualspellcheck/week)](https://pepy.tech/project/contextualspellcheck)
 [![GitHub contributors](https://img.shields.io/github/contributors/r1j1t/contextualSpellCheck)](https://github.com/R1j1t/contextualSpellCheck/graphs/contributors)
 [![Help Wanted](https://img.shields.io/badge/Help%20Wanted-Task%20List-violet)](https://github.com/R1j1t/contextualSpellCheck#task-list)
+[![DOI](https://zenodo.org/badge/254703118.svg)](https://zenodo.org/badge/latestdoi/254703118)
 
 ## Types of spelling mistakes
 
