@@ -9,6 +9,7 @@ from ..contextualSpellCheck import ContextualSpellCheck
 # print(contextualSpellCheck.__name__,contextualSpellCheck.__package__,contextualSpellCheck.__file__,sep="\n")
 # This is the class we want to test. So, we need to import it
 
+warnings.filterwarnings('ignore', category=DeprecationWarning)
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -528,6 +529,7 @@ def test_warning():
     )
 
     with warnings.catch_warnings(record=True) as w:
+        warnings.filterwarnings('ignore', category=DeprecationWarning)
         # Cause all warnings to always be triggered.
         # warnings.simplefilter("always")
         # Trigger a warning.
@@ -551,6 +553,7 @@ element in pipeline eg. merge_entities"
         # warnings.simplefilter("default")
 
     with warnings.catch_warnings(record=True) as w:
+        warnings.filterwarnings('ignore', category=DeprecationWarning)
         nlp = spacy.load("en_core_web_sm")
         ContextualSpellCheck(nlp, "contextualSpellCheck", vocab_path=True)
 
