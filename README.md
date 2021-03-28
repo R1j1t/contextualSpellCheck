@@ -213,10 +213,10 @@ If you like the project, please ⭑ the project and show your support! Also, if 
 
 ## Cite
 
-If you are using this project in your academic work please consider citing using below BibTex:
+If you are using contextualSpellCheck in your academic work, please consider citing the library using the below BibTex entry:
 
-```
-@software{rajat_goel_2021_4642380,
+```bibtex
+@software{contextualSpellCheck_2021,
   author       = {Rajat Goel},
   title        = {contextualSpellCheck},
   month        = mar,
