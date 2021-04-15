@@ -1,6 +1,6 @@
 Flask
 spacy>=3.0.0
-editdistance==0.5.3
+rapidfuzz==1.4.1
 pytest
 --find-links https://download.pytorch.org/whl/torch_stable.html
 torch>=1.4

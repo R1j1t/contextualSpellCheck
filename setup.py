@@ -30,7 +30,7 @@ setuptools.setup(
     python_requires=">=3.6",
     install_requires=[
         "torch>=1.4",
-        "editdistance==0.5.3",
+        "rapidfuzz==1.4.1",
         "transformers>=4.0.0",
         "spacy>=3.0.0",
     ],

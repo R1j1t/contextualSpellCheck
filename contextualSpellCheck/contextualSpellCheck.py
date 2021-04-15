@@ -5,7 +5,7 @@ import warnings
 from datetime import datetime
 import unicodedata
 
-import editdistance
+from rapidfuzz import process, string_metric
 import spacy
 import torch
 from spacy.tokens import Doc, Token, Span
@@ -379,18 +379,21 @@ class ContextualSpellCheck(object):
         response = {}
         #         doc = self.nlp(query)
         for misspell in misspellings_dict:
-            # Init least_edit distance
-            least_edit_dist = self.max_edit_dist
-
             if self.debug:
                 print(
                     "misspellings_dict[misspell]", misspellings_dict[misspell]
                 )
-            for candidate in misspellings_dict[misspell]:
-                edit_dist = editdistance.eval(misspell.text, candidate)
-                if edit_dist < least_edit_dist:
-                    least_edit_dist = edit_dist
-                    response[misspell] = candidate
+
+            if self.max_edit_dist:
+                match = process.extractOne(
+                    misspell.text,
+                    misspellings_dict[misspell],
+                    scorer=string_metric.levenshtein,
+                    processor=None,
+                    score_cutoff=self.max_edit_dist - 1,
+                )
+                if match:
+                    response[misspell] = match[0]
 
             if self.debug:
                 if len(response) != 0:
