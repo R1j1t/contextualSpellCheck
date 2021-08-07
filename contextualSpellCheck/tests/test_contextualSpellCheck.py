@@ -519,7 +519,7 @@ def test_token_extension():
 
 
 def test_warning():
-    nlp = spacy.load("en_core_web_sm")
+    nlp = spacy.load("en_core_web_md")
     if "contextual spellchecker" not in nlp.pipe_names:
         nlp.add_pipe("contextual spellchecker")
     # merge_ents = nlp.create_pipe("merge_entities")
