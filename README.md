@@ -35,7 +35,7 @@ pip install contextualSpellCheck
 
 ### How to load the package in spacy pipeline
 
-```bash
+```python
 >>> import contextualSpellCheck
 >>> import spacy
 >>> nlp = spacy.load("en_core_web_sm") 
@@ -55,7 +55,7 @@ pip install contextualSpellCheck
 
 Or you can add to spaCy pipeline manually!
 
-```bash
+```python
 >>> import spacy
 >>> import contextualSpellCheck
 >>> 
@@ -80,7 +80,7 @@ After adding `contextual spellchecker` in the pipeline, you use the pipeline nor
 
 ### Using the pipeline
 
-```bash
+```python
 >>> doc = nlp(u'Income was $9.4 milion compared to the prior year of $2.7 milion.')
 >>> 
 >>> # Doc Extention
