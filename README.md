@@ -185,7 +185,6 @@ Response:
 
 ## Task List
 
-- [ ] dependency version in setup.py ([#38](https://github.com/R1j1t/contextualSpellCheck/issues/38))
 - [ ] use cython for part of the code to improve performance ([#39](https://github.com/R1j1t/contextualSpellCheck/issues/39))
 - [ ] Improve metric for candidate selection ([#40](https://github.com/R1j1t/contextualSpellCheck/issues/40))
 - [ ] Add examples for other langauges ([#41](https://github.com/R1j1t/contextualSpellCheck/issues/41))
@@ -203,6 +202,7 @@ Response:
 - [x] specify maximum edit distance for `candidateRanking`
 - [x] allow user to specify bert model
 - [x] Include transformers deTokenizer to get better suggestions
+- [x] dependency version in setup.py ([#38](https://github.com/R1j1t/contextualSpellCheck/issues/38))
 
 </p>
 </details>
