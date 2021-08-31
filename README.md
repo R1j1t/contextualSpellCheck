@@ -216,16 +216,17 @@ If you like the project, please ⭑ the project and show your support! Also, if 
 If you are using contextualSpellCheck in your academic work, please consider citing the library using the below BibTex entry:
 
 ```bibtex
-@software{contextualSpellCheck_2021,
-  author       = {Rajat Goel},
-  title        = {contextualSpellCheck},
-  month        = mar,
-  year         = 2021,
-  publisher    = {Zenodo},
-  doi          = {10.5281/zenodo.4642379},
-  url          = {https://doi.org/10.5281/zenodo.4642379}
+@misc{Goel_Contextual_Spell_Check_2021,
+author = {Goel, Rajat},
+doi = {10.5281/zenodo.4642379},
+month = {3},
+title = {{Contextual Spell Check}},
+url = {https://github.com/R1j1t/contextualSpellCheck},
+year = {2021}
 }
 ```
+
+
 
 ## Reference
 
