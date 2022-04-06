@@ -113,6 +113,7 @@ class ContextualSpellCheck(object):
         self.BertModel = AutoModelForMaskedLM.from_pretrained(self.model_name)
         self.mask = self.BertTokenizer.mask_token
         self.debug = debug
+        self.nlp = nlp
         self.performance = performance
         if not Doc.has_extension("contextual_spellCheck"):
             Doc.set_extension("contextual_spellCheck", default=True)
@@ -247,18 +248,12 @@ class ContextualSpellCheck(object):
 
         misspell = []
         for token in docCopy:
-            if (
-                (token.text.lower() not in self.vocab)
-                and (token.ent_type_ != "PERSON")
-                and (not token.like_num)
-                and (not token.like_email)
-                and (not token.like_url)
-                # added after 0.0.4
-                and (not token.is_space)
-                and (not token.is_punct)
-                and (token.ent_type_ != "GPE")
-                and (token.ent_type_ != "ORG")
-            ):
+            if self.nlp.meta.get("name").endswith("sm"):
+                is_oov = self.is_oov(token)
+                if token.text.lower() not in self.vocab and is_oov:
+                    if self.deep_tokenize_in_vocab(token.text):
+                        misspell.append(token)
+            elif token.text not in nlp.vocab and is_oov:
                 if self.deep_tokenize_in_vocab(token.text):
                     misspell.append(token)
         if self.debug:
@@ -422,6 +417,21 @@ class ContextualSpellCheck(object):
             print("Final suggestions", doc._.suggestions_spellCheck)
 
         return response
+
+    @staticmethod
+    def is_oov(token) -> bool:
+        if (
+            (token.ent_type_ != "PERSON")
+            and (not token.like_num)
+            and (not token.like_email)
+            and (not token.like_url)
+            and (not token.is_space)
+            and (not token.is_punct)
+            and (token.ent_type_ != "GPE")
+            and (token.ent_type_ != "ORG")
+        ):
+            return True
+        return False
 
     @staticmethod
     def time_log(fn_name, relative_time):
@@ -637,7 +647,7 @@ class ContextualSpellCheck(object):
 
 if __name__ == "__main__":
     print("Code running...")
-    nlp = spacy.load("en_core_web_sm")
+    nlp = spacy.load("en_core_web_md")
     # for issue #1
     # merge_ents = nlp.create_pipe("merge_entities")
     if "parser" not in nlp.pipe_names:
