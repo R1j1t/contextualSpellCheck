@@ -112,7 +112,7 @@ True
 
 ## Extensions
 
-To make the usage easy, `contextual spellchecker` provides custom spacy extensions which your code can consume. This makes it easier for the user to get the desired data. contextualSpellCheck provides extensions on the `doc`, `span` and `token` level. Below tables summaries the extensions.
+To make the usage easy, `contextual spellchecker` provides custom spacy extensions which your code can consume. This makes it easier for the user to get the desired data. contextualSpellCheck provides extensions on the `doc`, `span` and `token` level. The below tables summarise the extensions.
 
 ### `spaCy.Doc` level extensions
 
