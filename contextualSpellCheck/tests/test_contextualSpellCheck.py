@@ -600,18 +600,13 @@ def test_vocab_file():
 
 def test_bert_model_name():
     model_name = "a_random_model"
-    error_message = (
-        f"Can't load config for '{model_name}'. Make sure that:\n\n"
-        f"- '{model_name}' is a correct model identifier listed on \
-'https://huggingface.co/models'\n\n"
-        f"- or '{model_name}' is the correct path to a directory \
-containing a config.json  file\n\n"
-    )
 
-    with pytest.raises(OSError) as e:
+    # transformer library can change the type of exception in the future.
+    # Hence it is best to catch generic error
+    with pytest.raises(Exception) as bad_model_name_exception:
         nlp = spacy.load("en_core_web_sm")
         ContextualSpellCheck(nlp, "contextualSpellCheck", model_name=model_name)
-        assert e == error_message
+        assert bad_model_name_exception.type is Exception
 
 
 def test_correct_model_name():
