@@ -9,7 +9,7 @@ from ..contextualSpellCheck import ContextualSpellCheck
 # print(contextualSpellCheck.__name__,contextualSpellCheck.__package__,contextualSpellCheck.__file__,sep="\n")
 # This is the class we want to test. So, we need to import it
 
-warnings.filterwarnings("ignore", category=DeprecationWarning)
+# warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -33,7 +33,8 @@ compared to the prior year of $2.7 million.",
 def test_no_misspellIdentify(inputSentence, misspell):
     print("Start no spelling mistake test\n")
     doc = nlp(inputSentence)
-    assert checker.misspell_identify(doc) == (misspell, doc)
+    print(checker.get_misspelled_tokens(doc))
+    assert checker.get_misspelled_tokens(doc) == (misspell, doc)
 
 
 @pytest.mark.parametrize(
@@ -48,9 +49,9 @@ def test_no_misspellIdentify(inputSentence, misspell):
 def test_type_misspellIdentify(inputSentence, misspell):
     print("Start type correction test for spelling mistake identification\n")
     doc = nlp(inputSentence)
-    assert isinstance(checker.misspell_identify(doc)[0], type(misspell))
-    assert isinstance(checker.misspell_identify(doc)[1], type(doc))
-    assert checker.misspell_identify(doc)[1] == doc
+    assert isinstance(checker.get_misspelled_tokens(doc)[0], type(misspell))
+    assert isinstance(checker.get_misspelled_tokens(doc)[1], type(doc))
+    assert checker.get_misspelled_tokens(doc)[1] == doc
 
 
 @pytest.mark.parametrize(
@@ -66,7 +67,7 @@ def test_type_misspellIdentify(inputSentence, misspell):
 def test_identify_misspellIdentify(inputSentence, misspell):
     print("Start misspell word identifation test\n")
     doc = nlp(inputSentence)
-    checkerReturn = checker.misspell_identify(doc)[0]
+    checkerReturn = checker.get_misspelled_tokens(doc)[0]
     assert isinstance(checkerReturn, list)
     # Changed the approach after v0.1.0
     assert [tok.text_with_ws for tok in checkerReturn] == [
@@ -93,7 +94,7 @@ def test_skipNumber_misspellIdentify(inputSentence, misspell):
     print("Start number not in misspell word test\n")
     doc = nlp(inputSentence)
     # Number should not be skipped for misspell
-    assert doc[misspell] not in checker.misspell_identify(doc)[0]
+    assert doc[misspell] not in checker.get_misspelled_tokens(doc)[0]
 
 
 @pytest.mark.parametrize(
@@ -108,7 +109,7 @@ def test_skipName_misspellIdentify(inputSentence, misspell):
     print("Start name not in misspell word test\n")
     doc = nlp(inputSentence)
     # Number should not be skipped for misspell
-    assert doc[misspell] not in checker.misspell_identify(doc)[0]
+    assert doc[misspell] not in checker.get_misspelled_tokens(doc)[0]
 
 
 @pytest.mark.parametrize(
@@ -121,7 +122,7 @@ def test_skipName_misspellIdentify(inputSentence, misspell):
 def test_skipEmail_misspellIdentify(inputSentence, misspell):
     print("Start Email not in misspell word test\n")
     doc = nlp(inputSentence)
-    assert doc[misspell] not in checker.misspell_identify(doc)[0]
+    assert doc[misspell] not in checker.get_misspelled_tokens(doc)[0]
 
 
 @pytest.mark.parametrize(
@@ -134,7 +135,7 @@ def test_skipEmail_misspellIdentify(inputSentence, misspell):
 def test_skipURL_misspellIdentify(inputSentence, misspell):
     print("Start URL not in misspell word test\n")
     doc = nlp(inputSentence)
-    assert doc[misspell] not in checker.misspell_identify(doc)[0]
+    assert doc[misspell] not in checker.get_misspelled_tokens(doc)[0]
 
 
 @pytest.mark.parametrize(
@@ -146,7 +147,7 @@ def test_skipURL_misspellIdentify(inputSentence, misspell):
 )
 def test_type_candidateGenerator(inputSentence, misspell):
     doc = nlp(inputSentence)
-    misspell, doc = checker.misspell_identify(doc)
+    misspell, doc = checker.get_misspelled_tokens(doc)
     assert isinstance(checker.candidate_generator(doc, misspell), tuple)
     assert isinstance(checker.candidate_generator(doc, misspell)[0], type(doc))
     assert isinstance(checker.candidate_generator(doc, misspell)[1], dict)
@@ -206,7 +207,7 @@ def test_type_candidateGenerator(inputSentence, misspell):
 def test_identify_candidateGenerator(inputSentence, misspell):
     print("Start misspell word identifation test\n")
     doc = nlp(inputSentence)
-    (misspellings, doc) = checker.misspell_identify(doc)
+    (misspellings, doc) = checker.get_misspelled_tokens(doc)
     doc, suggestions = checker.candidate_generator(doc, misspellings)
     # changed after v1.0 because of deepCopy creatng issue with ==
     # gold_suggestions = {doc[key]: value for key, value in misspell.items()}
@@ -230,7 +231,7 @@ def test_identify_candidateGenerator(inputSentence, misspell):
 )
 def test_extension_candidateGenerator(inputSentence, misspell):
     doc = nlp(inputSentence)
-    (misspellings, doc) = checker.misspell_identify(doc)
+    (misspellings, doc) = checker.get_misspelled_tokens(doc)
     checker.candidate_generator(doc, misspellings)
     assert doc._.performed_spellCheck == misspell
 
@@ -288,7 +289,7 @@ def test_extension_candidateGenerator(inputSentence, misspell):
 )
 def test_extension2_candidateGenerator(inputSentence, misspell):
     doc = nlp(inputSentence)
-    (misspellings, doc) = checker.misspell_identify(doc)
+    (misspellings, doc) = checker.get_misspelled_tokens(doc)
     doc, suggestions = checker.candidate_generator(doc, misspellings)
 
     # changes after v0.1.0
@@ -323,7 +324,7 @@ def test_extension2_candidateGenerator(inputSentence, misspell):
 )
 def test_ranking_candidateRanking(inputSentence, misspell):
     doc = nlp(inputSentence)
-    (misspellings, doc) = checker.misspell_identify(doc)
+    (misspellings, doc) = checker.get_misspelled_tokens(doc)
     doc, suggestions = checker.candidate_generator(doc, misspellings)
     selectedWord = checker.candidate_ranking(doc, suggestions)
     # changes made after v0.1
