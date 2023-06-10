@@ -1,3 +1,8 @@
+# Fork changes
+
+Added lowercased candidates comparison, Damerau distance, Bayesian reasoning, GPU inference. Exposed top_n candidates parameter instead of the hardcoded number.
+As explained in the original <a href="https://github.com/R1j1t/contextualSpellCheck/issues/88/">issue</a>.
+
 # spellCheck
 <a href="https://github.com/R1j1t/contextualSpellCheck"><img src="https://user-images.githubusercontent.com/22280243/82138959-2852cd00-9842-11ea-918a-49b2a7873ef6.png" width="276" height="120" align="right" /></a>
 
@@ -23,11 +28,7 @@ This package currently focuses on Out of Vocabulary (OOV) word or non-word error
 
 ## Install
 
-The package can be installed using [pip](https://pypi.org/project/contextualSpellCheck/). You would require python 3.6+
-
-```bash
-pip install contextualSpellCheck
-```
+The fork should be installed from the source. You would require python 3.6+
 
 ## Usage
 

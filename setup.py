@@ -34,5 +34,7 @@ setuptools.setup(
         "editdistance==0.6.0",
         "transformers>=4.0.0",
         "spacy>=3.0.0",
+        "fastDamerauLevenshtein",
+        "numpy"
     ],
 )
