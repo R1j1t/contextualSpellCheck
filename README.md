@@ -19,7 +19,7 @@ It is essential to understand that identifying whether a candidate is a spelling
 >
 > -- [Monojit Choudhury et. al. (2007)][1]
 
-This package currently focuses on Out of Vocabulary (OOV) word or non-word error (NWE) correction using BERT model. The idea of using BERT was to use the context when correcting OOV. To improve this package, I would like to extend the functionality to identify RWE, optimising the package, and improving the documentation.
+This package currently focuses on Out of Vocabulary (OOV) word or non-word error (NWE) correction using BERT model. The idea of using BERT was to use the context when correcting OOV. Supports Damerau distance, Bayesian reasoning, GPU inference. To improve this package, I would like to extend the functionality to identify RWE, optimising the package, and improving the documentation.
 
 ## Install
 
