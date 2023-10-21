@@ -260,7 +260,7 @@ class ContextualSpellCheck(object):
         # deep copy is required to preserve individual token info
         # from objects in pipeline which can modify token info
         # like merge_entities
-        docCopy = doc  # copy.deepcopy(doc)
+        docCopy = copy.deepcopy(doc)  # TODO: find ways to only do deepcopy when absolutely neccessary, as it is a hotspot in the profiling
 
         misspell = []
         for token in docCopy:
