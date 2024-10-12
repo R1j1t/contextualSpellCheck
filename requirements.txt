@@ -1,5 +1,5 @@
 spacy>=3.0.0
-editdistance==0.8
+editdistance==0.8.*
 pytest
 --find-links https://download.pytorch.org/whl/torch_stable.html
 torch>=1.4
