@@ -5,7 +5,7 @@ Contextual word checker for better suggestions
 
 [![license](https://img.shields.io/github/license/r1j1t/contextualSpellCheck)](https://github.com/R1j1t/contextualSpellCheck/blob/master/LICENSE) 
 [![PyPI](https://img.shields.io/pypi/v/contextualSpellCheck?color=green)](https://pypi.org/project/contextualSpellCheck/) 
-[![Python-Version](https://img.shields.io/badge/Python-3.6+-green)](https://github.com/R1j1t/contextualSpellCheck#install)
+[![Python-Version](https://img.shields.io/badge/Python-3.9+-green)](https://github.com/R1j1t/contextualSpellCheck#install)
 [![Downloads](https://pepy.tech/badge/contextualspellcheck/week)](https://pepy.tech/project/contextualspellcheck)
 [![GitHub contributors](https://img.shields.io/github/contributors/r1j1t/contextualSpellCheck)](https://github.com/R1j1t/contextualSpellCheck/graphs/contributors)
 [![Help Wanted](https://img.shields.io/badge/Help%20Wanted-Task%20List-violet)](https://github.com/R1j1t/contextualSpellCheck#task-list)
