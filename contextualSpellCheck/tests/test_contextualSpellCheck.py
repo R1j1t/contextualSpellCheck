@@ -593,8 +593,8 @@ def test_vocab_file():
     ContextualSpellCheck(
         nlp, "contextualSpellCheck", vocab_path=testVocab, debug=True
     )
-    with open(orgDebugFilePath) as f1:
-        with open(debugPathFile) as f2:
+    with open(orgDebugFilePath, encoding="utf8") as f1:
+        with open(debugPathFile, encoding="utf8") as f2:
             assert f1.read() == f2.read()
 
 

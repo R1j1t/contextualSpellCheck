@@ -92,7 +92,7 @@ class ContextualSpellCheck(object):
                     debug_file_path = os.path.join(
                         current_path, "tests", "debugFile.txt"
                     )
-                    with open(debug_file_path, "w+") as new_file:
+                    with open(debug_file_path, "w+", encoding="utf8") as new_file:
                         new_file.write("\n".join(words))
                     print("Final vocab at " + debug_file_path)
 
